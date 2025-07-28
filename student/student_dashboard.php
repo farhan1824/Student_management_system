@@ -1,0 +1,514 @@
+<?php
+session_start();
+if (!isset($_SESSION['student_roll'])) {
+    header("Location: student_login.php");
+    exit();
+}
+
+require_once '../db/db.php';
+
+$studentRoll = $_SESSION['student_roll'];
+$studentName = 'Student';
+$profilePic = 'default.jpg';
+$studentId = 0;
+$today = date('Y-m-d');
+// Fetch student info
+$sql = "SELECT id, name, profile_pic FROM students WHERE roll = '$studentRoll'";
+$result = $conn->query($sql);
+if ($result && $result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $studentId = $row['id'];
+    $studentName = $row['name'];
+    $profilePic = $row['profile_pic'] ?? 'default.jpg';
+}
+
+// Total classes conducted across all subjects
+$allClassSql = "
+    SELECT COUNT(*) AS total_classes
+    FROM teach_attendance ta
+    WHERE ta.subject_id IN (
+        SELECT subject_id FROM student_subjects WHERE student_id = $studentId
+    )
+";
+$classRes = $conn->query($allClassSql);
+$totalTeacherClasses = $classRes->fetch_assoc()['total_classes'] ?? 0;
+
+// Total student attendance
+$presentSql = "SELECT COUNT(*) AS attended FROM student_attendance WHERE student_id = $studentId";
+$presentRes = $conn->query($presentSql);
+$totalAttended = $presentRes->fetch_assoc()['attended'] ?? 0;
+
+$presentPercent = ($totalTeacherClasses > 0) ? round(($totalAttended / $totalTeacherClasses) * 100) : 0;
+
+// Subject-wise attendance
+$subjectSql = "
+    SELECT 
+        su.id AS subject_id,
+        su.name AS subject_name,
+        (
+            SELECT COUNT(*) 
+            FROM teach_attendance ta 
+            WHERE ta.subject_id = su.id
+        ) AS total_classes,
+        (
+            SELECT COUNT(*) 
+            FROM student_attendance sa 
+            WHERE sa.subject_id = su.id AND sa.student_id = $studentId
+        ) AS attended_classes
+    FROM student_subjects ss
+    JOIN subjects su ON su.id = ss.subject_id
+    WHERE ss.student_id = $studentId
+";
+$subjects = $conn->query($subjectSql);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .profile img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #007bff;
+    }
+    .profile h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .progress-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(#28a745 <?php echo $presentPercent; ?>%, #eee 0%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin: 20px auto;
+    }
+
+    .subjects {
+      margin-top: 20px;
+    }
+
+    .subjects h3 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .subject-row {
+      background: #f9f9f9;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-left: 5px solid #007bff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .subject-row .bar {
+      flex: 1;
+      margin-left: 20px;
+      background: #e0e0e0;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .subject-row .bar .fill {
+      height: 100%;
+      background: #007bff;
+    }
+
+    .request-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 25px;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s ease;
+    }
+
+    .request-btn:hover {
+      background: linear-gradient(to right, #e03e57, #e1441d);
+    }
+
+    .logout-btn {
+      display: inline-block;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      text-decoration: none;
+      background: #dc3545;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+    }
+    /* The Modal (background) */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 9999; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      transition: opacity 0.3s ease;
+    }
+
+    /* Modal Content Box */
+    .modal-content {
+      background-color: #fff;
+      margin: 6% auto; /* 6% from the top and centered */
+      padding: 30px 40px;
+      border-radius: 12px;
+      max-width: 450px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #222;
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    /* Close Button */
+    .close-btn {
+      color: #888;
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .close-btn:hover {
+      color: #ff4b2b; /* accent color */
+    }
+
+    /* Headings */
+    .modal-content h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 24px;
+      color: #007bff;
+      text-align: center;
+    }
+
+    /* Labels */
+    .modal-content label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    /* Inputs, Select, Textarea */
+    .modal-content input[type="date"],
+    .modal-content select,
+    .modal-content textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1.8px solid #ccc;
+      font-size: 16px;
+      font-family: inherit;
+      color: #444;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    .modal-content input[type="date"]:focus,
+    .modal-content select:focus,
+    .modal-content textarea:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 6px #007bffaa;
+    }
+
+    /* Textarea */
+    .modal-content textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
+    /* Submit Button */
+    .modal-content button {
+      margin-top: 24px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: linear-gradient(90deg, #ff416c, #ff4b2b);
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .modal-content button:hover {
+      background: linear-gradient(90deg, #e03e57, #e1441d);
+    }
+
+    /* Date field container for easy toggling */
+    #dateField {
+      margin-top: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      .modal-content {
+        margin: 15% 15px;
+        padding: 20px;
+        width: auto;
+      }
+    }
+
+  </style>
+</head>
+<body>
+<!-- Modal Popup for Recheck -->
+
+
+<!-- Popup Modal -->
+<div id="recheckModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeRecheckPopup()">&times;</span>
+    <h3>Request Recheck</h3>
+
+    <label for="subjectSelect">Subject:</label>
+    <select id="subjectSelect"></select>
+
+    <label for="reasonType">Reason Type:</label>
+    <select id="reasonType" onchange="toggleDateField()">
+      <option value="attendance">Attendance</option>
+      <option value="result">Result</option>
+    </select>
+
+    <div id="dateField">
+      <label for="recheckDate">Date:</label>
+      <input
+        type="date"
+        id="recheckDate"
+        name="date"
+        max="<?php echo $today; ?>"  
+    >
+      <!-- <input type="date" id="recheckDate" /> -->
+    </div>
+
+    <label for="recheckReason">Reason:</label>
+    <textarea id="recheckReason" rows="4" placeholder="Enter your reason..."></textarea>
+
+    <button onclick="submitRecheck()">Submit Request</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="profile">
+    <img src="../<?php echo htmlspecialchars($profilePic); ?>" alt="Profile Picture" />
+    <div>
+      <h2>Welcome, <?php echo htmlspecialchars($studentName); ?></h2>
+      <p>Roll: <?php echo htmlspecialchars($studentRoll); ?></p>
+    </div>
+  </div>
+
+  <div class="progress-circle">
+    <?php echo $presentPercent; ?>%
+  </div>
+
+  <div class="subjects">
+    <h3>Your Subjects & Attendance</h3>
+    <?php while ($sub = $subjects->fetch_assoc()): 
+      $present = (int)$sub['attended_classes'];
+      $total = (int)$sub['total_classes'];
+      $percentage = ($total > 0) ? round(($present / $total) * 100) : 0;
+    ?>
+    <div class="subject-row">
+      <div><?php echo htmlspecialchars($sub['subject_name']); ?></div>
+      <div class="bar"><div class="fill" style="width: <?php echo $percentage; ?>%"></div></div>
+      <div><?php echo $percentage; ?>%</div>
+    </div>
+    <?php endwhile; ?>
+  </div>
+
+  <button class="request-btn" onclick="requestRecheck(<?php echo $studentId; ?>)">Request Recheck</button>
+</div>
+
+<a href="../logout.php" class="logout-btn">Logout</a>
+
+
+
+</body>
+</html>
+<script>
+let studentId = <?php echo json_encode($studentId); ?>;
+
+function requestRecheck() {
+  // Show modal
+  document.getElementById('recheckModal').style.display = 'block';
+
+  // Clear previous options
+  const select = document.getElementById('subjectSelect');
+  select.innerHTML = '<option value="">Loading...</option>';
+
+  fetch('../QueryModel/ajax_call.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ action: 'get_student_subjects' })
+  })
+    .then(res => res.json())
+    .then(subjects => {
+      select.innerHTML = '';
+      if (subjects.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = "No subjects found";
+        opt.disabled = true;
+        select.appendChild(opt);
+      } else {
+        subjects.forEach(sub => {
+          const opt = document.createElement('option');
+          opt.value = sub.name;
+          opt.textContent = sub.name;
+          select.appendChild(opt);
+        });
+      }
+    })
+    .catch(err => {
+      console.error("Failed to load subjects:", err);
+      select.innerHTML = '<option value="">Error loading subjects</option>';
+    });
+}
+
+function closeRecheckPopup() {
+  document.getElementById('recheckModal').style.display = 'none';
+}
+
+function toggleDateField() {
+  const reasonType = document.getElementById('reasonType').value;
+  document.getElementById('dateField').style.display = reasonType === 'attendance' ? 'block' : 'none';
+}
+
+function submitRecheck() {
+  const subjectName = document.getElementById('subjectSelect').value;
+  const reasonType = document.getElementById('reasonType').value;
+  const reason = document.getElementById('recheckReason').value.trim();
+  const date = document.getElementById('recheckDate').value;
+
+  if (!subjectName || !reasonType || !reason || (reasonType === 'attendance' && !date)) {
+    alert('Please fill all required fields.');
+    return;
+  }
+
+  const formData = new URLSearchParams({
+    action: 'request_recheck',
+    student_id: studentId,
+    subject_name: subjectName,
+    reason_type: reasonType,
+    reason: reason
+  });
+
+  if (reasonType === 'attendance') {
+    formData.append('date', date);
+  }
+
+  fetch('../QueryModel/ajax_call.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData
+  })
+    .then(res => res.text())
+    .then(data => {
+      alert(data);
+      closeRecheckPopup();
+    })
+    .catch(err => {
+      alert("Error occurred.");
+      console.error(err);
+    });
+}
+
+// function requestRecheck(studentId) {
+//   const subjectName = prompt("Enter Subject Name for Recheck:");
+//   const reasonType = prompt("Enter reason type: attendance or result").toLowerCase();
+//   if (!["attendance", "result"].includes(reasonType)) {
+//     alert("Invalid reason type.");
+//     return;
+//   }
+
+//   let date = '';
+//   if (reasonType === 'attendance') {
+//     date = prompt("Enter Date (YYYY-MM-DD):");
+//     if (!date) {
+//       alert("Date is required for attendance correction.");
+//       return;
+//     }
+//   }
+
+//   const reason = prompt("Enter your reason for recheck:");
+//   if (!subjectName || !reason) return;
+
+//   const formData = new URLSearchParams({
+//     action: 'request_recheck',
+//     student_id: studentId,
+//     subject_name: subjectName,
+//     reason_type: reasonType,
+//     reason: reason
+//   });
+
+//   if (date) {
+//     formData.append('date', date);
+//   }
+
+//   fetch('../QueryModel/ajax_call.php', {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+//     body: formData
+//   })
+//     .then(res => res.text())
+//     .then(alert)
+//     .catch(err => {
+//       alert("Error occurred.");
+//       console.error(err);
+//     });
+// }
+
+</script>

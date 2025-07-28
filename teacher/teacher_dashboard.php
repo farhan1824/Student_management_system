@@ -162,8 +162,87 @@ $today = date('Y-m-d');
     <div style="text-align: center;">
         <a href="../logout.php" class="logout-btn">Logout</a>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+// function markAttendance(subjectId, checkbox) {
+//     if (!checkbox.checked) return;
+
+//     checkbox.disabled = true;
+
+//     const link = document.getElementById('link-' + subjectId);
+
+//     // Add a temporary "Saving..." span safely
+//     const savingText = document.createElement('small');
+//     savingText.innerText = ' Saving...';
+//     savingText.style.color = 'gray';
+//     savingText.classList.add('saving-status'); // for later removal
+//     checkbox.parentElement.appendChild(savingText);
+
+//     fetch('../QueryModel/ajax_call.php', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+//         body: new URLSearchParams({
+//             action: 'mark_attendance',
+//             subject_id: subjectId
+//         })
+//     })
+//     .then(response => {
+//         if (!response.ok) throw new Error('Server error');
+//         return response.text();
+//     })
+//     .then(data => {
+//         alert(data);
+//         console.log("Attendance submitted:", new Date().toLocaleTimeString());
+
+//         if (link) {
+//             link.classList.remove('disabled');
+//             link.classList.add('active');
+//         }
+
+//         // Remove "Saving..." message
+//         const savingEl = checkbox.parentElement.querySelector('.saving-status');
+//         if (savingEl) savingEl.remove();
+
+//         // Update progress bar visually
+//         const row = checkbox.closest('tr');
+//         const classCount = parseInt(row.children[1].innerText, 10);
+//         const smallTag = row.querySelector('td:nth-child(3) small');
+//         const bar = row.querySelector('.progress-bar');
+
+//         if (classCount && bar && smallTag) {
+//             let currentPercent = parseInt(smallTag.innerText.replace('%', ''), 10) || 0;
+//             let attended = Math.round((currentPercent / 100) * classCount);
+
+//             attended += 1; // Add newly marked class
+//             const newPercent = Math.round((attended / classCount) * 100);
+
+//             // Update progress bar width and color
+//             bar.style.width = newPercent + '%';
+//             bar.style.background = newPercent >= 80 ? '#28a745' : newPercent >= 50 ? '#ffc107' : '#dc3545';
+
+//             // Update % text
+//             smallTag.innerText = newPercent + '%';
+
+//             // Update tooltip title with attended classes count
+//             const container = row.querySelector('.progress-container');
+//             if (container) {
+//                 container.title = `${attended}/${classCount} classes`;
+//             }
+//         }
+//     })
+//     .catch(error => {
+//         alert('Error submitting attendance');
+//         console.error(error);
+
+//         // Roll back checkbox changes
+//         checkbox.checked = false;
+//         checkbox.disabled = false;
+
+//         const savingEl = checkbox.parentElement.querySelector('.saving-status');
+//         if (savingEl) savingEl.remove();
+//     });
+// }
 function markAttendance(subjectId, checkbox) {
     if (!checkbox.checked) return;
 
@@ -175,7 +254,7 @@ function markAttendance(subjectId, checkbox) {
     const savingText = document.createElement('small');
     savingText.innerText = ' Saving...';
     savingText.style.color = 'gray';
-    savingText.classList.add('saving-status'); // for later removal
+    savingText.classList.add('saving-status');
     checkbox.parentElement.appendChild(savingText);
 
     fetch('../QueryModel/ajax_call.php', {
@@ -191,8 +270,16 @@ function markAttendance(subjectId, checkbox) {
         return response.text();
     })
     .then(data => {
-        alert(data);
-        console.log("Attendance submitted:", new Date().toLocaleTimeString());
+        // ✅ Stylish Success Popup
+        Swal.fire({
+            icon: 'success',
+            title: 'Attendance Submitted!',
+            text: data,
+            timer: 1800,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
 
         if (link) {
             link.classList.remove('disabled');
@@ -212,18 +299,13 @@ function markAttendance(subjectId, checkbox) {
         if (classCount && bar && smallTag) {
             let currentPercent = parseInt(smallTag.innerText.replace('%', ''), 10) || 0;
             let attended = Math.round((currentPercent / 100) * classCount);
-
-            attended += 1; // Add newly marked class
+            attended += 1;
             const newPercent = Math.round((attended / classCount) * 100);
 
-            // Update progress bar width and color
             bar.style.width = newPercent + '%';
             bar.style.background = newPercent >= 80 ? '#28a745' : newPercent >= 50 ? '#ffc107' : '#dc3545';
-
-            // Update % text
             smallTag.innerText = newPercent + '%';
 
-            // Update tooltip title with attended classes count
             const container = row.querySelector('.progress-container');
             if (container) {
                 container.title = `${attended}/${classCount} classes`;
@@ -231,15 +313,24 @@ function markAttendance(subjectId, checkbox) {
         }
     })
     .catch(error => {
-        alert('Error submitting attendance');
-        console.error(error);
+        // ❌ Stylish Error Popup
+        Swal.fire({
+            icon: 'error',
+            title: 'Submission Failed',
+            text: 'Something went wrong. Please try again.',
+            timer: 2500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
 
-        // Roll back checkbox changes
         checkbox.checked = false;
         checkbox.disabled = false;
 
         const savingEl = checkbox.parentElement.querySelector('.saving-status');
         if (savingEl) savingEl.remove();
+
+        console.error(error);
     });
 }
 

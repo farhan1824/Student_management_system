@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //     echo "Unauthorized access.";
     //     exit();
     // }
-    if (!isset($_SESSION['student_roll']) && !isset($_SESSION['teacher_number'])) {
+    if (!isset($_SESSION['student_roll']) && !isset($_SESSION['teacher_number'])&& !isset($_SESSION["register_student_roll"])) {
     http_response_code(403);
     echo "Unauthorized access.";
     exit();
@@ -61,6 +61,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode([]);
             }
             break;
+        case 'save_selected_subjects':
+    if (isset($_SESSION['register_student_roll'])) {
+        studentSubjectSelect($conn);
+    } else {
+        http_response_code(403);
+        echo "Session expired.";
+    }
+    break;
+
 
         default:
             http_response_code(400);

@@ -198,6 +198,8 @@ $students = $conn->query($studentSql);
 
 </body>
 </html>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     // On date change, reload with the selected date
 document.getElementById('date').addEventListener('change', function () {
@@ -224,37 +226,84 @@ function markStudentAttendance(studentId, checkbox) {
     })
     .then(response => response.text())
     .then(data => {
-        alert(data);
+        Swal.fire({
+            icon: 'success',
+            title: 'Attendance Marked',
+            text: data,
+            timer: 2000,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false
+        });
     })
     .catch(err => {
-        alert("Error marking attendance.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error marking attendance.',
+            toast: true,
+            position: 'top-end',
+            timer: 2500,
+            showConfirmButton: false
+        });
         checkbox.checked = false;
         checkbox.disabled = false;
         console.error(err);
     });
 }
-function requestCorrection(studentId) {
-    const reason = prompt("Please provide a reason for attendance correction:");
-    if (!reason) return;
 
-    fetch('../QueryModel/ajax_call.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            action: 'request_attendance_correction',
-            student_id: studentId,
-            subject_id: <?php echo $subjectId; ?>,
-            date: "<?php echo $selectedDate; ?>",
-            reason: reason
+function requestCorrection(studentId) {
+    Swal.fire({
+        title: 'Request Attendance Correction',
+        input: 'text',
+        inputLabel: 'Reason',
+        inputPlaceholder: 'Enter your reason...',
+        showCancelButton: true,
+        confirmButtonText: 'Submit',
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#dc3545',
+        inputValidator: (value) => {
+            if (!value) return 'You need to provide a reason!';
+        }
+    }).then(result => {
+        if (!result.isConfirmed) return;
+
+        fetch('../QueryModel/ajax_call.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                action: 'request_attendance_correction',
+                student_id: studentId,
+                subject_id: <?php echo $subjectId; ?>,
+                date: "<?php echo $selectedDate; ?>",
+                reason: result.value
+            })
         })
-    })
-    .then(res => res.text())
-    .then(data => {
-        alert(data);
-    })
-    .catch(err => {
-        alert("Error requesting correction.");
-        console.error(err);
+        .then(res => res.text())
+        .then(data => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Correction Requested',
+                text: data,
+                timer: 2000,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false
+            });
+        })
+        .catch(err => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error requesting correction.',
+                toast: true,
+                position: 'top-end',
+                timer: 2500,
+                showConfirmButton: false
+            });
+            console.error(err);
+        });
     });
 }
+
 </script>

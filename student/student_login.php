@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (isset($_SESSION['student_roll'])) {
+    header("Location: student_dashboard.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

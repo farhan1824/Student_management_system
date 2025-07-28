@@ -366,6 +366,68 @@ function allCheckAndInsertData($firstName, $middleName, $lastName, $dob, $gender
     $stmt->close();
     $conn->close();
 }
+function studentSubjectSelect($conn) {
+    $roll = $_SESSION['register_student_roll'];
+
+    // Fetch current student info
+    $studentResult = $conn->query("SELECT id, name, email FROM students WHERE roll = '$roll'");
+    if (!$studentResult || $studentResult->num_rows !== 1) {
+        http_response_code(404);
+        echo "Student not found.";
+        return;
+    }
+
+    $student = $studentResult->fetch_assoc();
+    $studentId = $student['id'];
+    $currentName = $student['name'];
+    $currentEmail = $student['email'];
+
+    // Get POST data
+    $newName = isset($_POST['name']) ? trim($_POST['name']) : '';
+    $newEmail = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $subjectList = isset($_POST['subjects']) ? explode(',', $_POST['subjects']) : [];
+
+    if (empty($subjectList)) {
+        http_response_code(400);
+        echo "No subjects selected.";
+        return;
+    }
+
+    // Sanitize values only if provided
+    $updateFields = [];
+    if (!empty($newName)) {
+        $safeName = $conn->real_escape_string($newName);
+        $updateFields[] = "name = '$safeName'";
+    }
+
+    if (!empty($newEmail)) {
+        $safeEmail = $conn->real_escape_string($newEmail);
+        $updateFields[] = "email = '$safeEmail'";
+    }
+
+    if (!empty($updateFields)) {
+        $updateSql = "UPDATE students SET " . implode(', ', $updateFields) . " WHERE id = $studentId";
+        $conn->query($updateSql);
+    }
+
+    // Clear previous subjects
+    $conn->query("DELETE FROM student_subjects WHERE student_id = $studentId");
+
+    // Insert selected subjects
+    $stmt = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
+    foreach ($subjectList as $subjectId) {
+        $subjectId = (int)$subjectId;
+        $stmt->bind_param("ii", $studentId, $subjectId);
+        $stmt->execute();
+    }
+    unset($_SESSION['register_student_roll']);
+    $_SESSION['student_roll'] = $roll;
+
+
+
+    echo "Subjects saved successfully.";
+}
+
 
 ?>
 

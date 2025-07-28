@@ -33,7 +33,6 @@ if ($res && $res->num_rows > 0) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Subject Choice</title>
   <style>
-    /* === Global Styling === */
     * {
       margin: 0;
       padding: 0;
@@ -104,7 +103,6 @@ if ($res && $res->num_rows > 0) {
       border: 1px solid #ccc;
     }
 
-    /* === Custom Dropdown === */
     .multi-select-container {
       position: relative;
       margin-top: 16px;
@@ -171,7 +169,6 @@ if ($res && $res->num_rows > 0) {
       margin-right: 10px;
     }
 
-    /* === Submit Button === */
     .middle button[type="submit"] {
       margin-top: 24px;
       padding: 12px 24px;
@@ -205,7 +202,7 @@ if ($res && $res->num_rows > 0) {
       <input type="text" id="student_name" value="<?php echo htmlspecialchars($studentName); ?>" />
 
       <label for="student_email">Email</label>
-      <input type="text" id="student_email" value="<?php echo htmlspecialchars($studentEmail); ?>" />
+      <input type="text" id="student_email" value="<?php echo htmlspecialchars($studentEmail); ?>" disabled />
 
       <label for="subject_multi_select">Choose Subjects</label>
       <div class="multi-select-container" id="subject_multi_select">
@@ -223,26 +220,21 @@ if ($res && $res->num_rows > 0) {
         </div>
       </div>
 
-      <form id="studentInfoForm" method="post" action="your_submit_endpoint.php">
-        <input type="hidden" name="student_name" id="hiddenStudentName" />
-        <div id="hiddenSubjectsContainer"></div>
+      <form id="studentInfoForm">
         <button type="submit">Submit</button>
       </form>
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+</body>
+</html>
 <script>
   const multiSelectBtn = document.getElementById('multiSelectBtn');
   const dropdown = document.getElementById('dropdownList');
   const arrow = document.getElementById('arrow');
   const multiSelectContainer = document.getElementById('subject_multi_select');
-
-  const studentNameInput = document.getElementById('student_name');
-  const studentEmailInput = document.getElementById('student_email');
-  const hiddenStudentName = document.getElementById('hiddenStudentName');
-  const hiddenSubjectsContainer = document.getElementById('hiddenSubjectsContainer');
-  const studentInfoForm = document.getElementById('studentInfoForm');
 
   function updateButtonLabel() {
     const checked = dropdown.querySelectorAll('input[type="checkbox"]:checked');
@@ -273,21 +265,81 @@ if ($res && $res->num_rows > 0) {
     cb.addEventListener('change', updateButtonLabel);
   });
 
-  studentInfoForm.addEventListener('submit', () => {
-    hiddenSubjectsContainer.innerHTML = '';
-    dropdown.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'subjects[]';
-      input.value = cb.value;
-      hiddenSubjectsContainer.appendChild(input);
+  updateButtonLabel();
+
+  const studentInfoForm = document.getElementById('studentInfoForm');
+  const studentNameInput = document.getElementById('student_name');
+
+  studentInfoForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const selectedSubjects = Array.from(dropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                                  .map(cb => cb.value);
+    if (selectedSubjects.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Subjects Selected',
+      text: 'Please select at least one subject before submitting.',
+      confirmButtonColor: '#F4D03F'
+    });
+    return;
+   }
+
+    const studentName = studentNameInput.value.trim();
+
+      fetch('../QueryModel/ajax_call.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        action: 'save_selected_subjects',
+        name: studentName,
+        subjects: selectedSubjects.join(',')
+      })
+    })
+    .then(res => res.text())
+    .then(data => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: data,
+        confirmButtonColor: '#28a745',
+        timer: 2500,
+        timerProgressBar: true,
+        willClose: () => {
+          window.location.href = "student_dashboard.php";
+        }
+      });
+    })
+    .catch(err => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Error submitting form. Please try again.',
+        confirmButtonColor: '#dc3545',
+      });
+      console.error(err);
     });
 
-    hiddenStudentName.value = studentNameInput.value.trim();
   });
 
-  updateButtonLabel();
-</script>
+  window.addEventListener('DOMContentLoaded', () => {
+    // Check if popup was already shown in this tab
+    if (!sessionStorage.getItem('subjectPopupShown')) {
+      const roll = <?php echo json_encode($studentRoll); ?>;
 
-</body>
-</html>
+      Swal.fire({
+        title: '⚠️ Subject Selection Notice',
+        html: `<p style="font-size: 18px;">Your <strong style="color:#d9534f;font-size:24px;">Roll Number: ${roll}</strong></p>
+               <p style="margin-top:10px;font-size:16px;">You must select your subjects within <strong>24 hours</strong>. After that, this option will no longer be available.</p>`,
+        icon: 'warning',
+        confirmButtonColor: '#F4D03F',
+        backdrop: true,
+        allowOutsideClick: false
+      });
+
+      // Mark popup as shown
+      sessionStorage.setItem('subjectPopupShown', 'true');
+    }
+  });
+
+</script>

@@ -5,126 +5,223 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login Portal</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin:0; padding:0; }
     body {
-      height: 100vh;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #2C3E50  0%, #9B59B6  100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #ffffff;
+      height:100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #2C3E50 0%, #9B59B6 100%);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
+      color:#fff;
+      transition: background 1s ease;
     }
-
+    #glassCanvas {
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      z-index:999;
+      display:none;
+      pointer-events:none;
+    }
     .container {
-      text-align: center;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      text-align:center;
+      padding:40px;
+      background: rgba(255,255,255,0.1);
+      border-radius:20px;
       backdrop-filter: blur(10px);
-      position: relative;
-      transition: all 0.4s ease;
+      box-shadow:0 8px 20px rgba(0,0,0,0.2);
+      z-index:1;
+      transition: opacity 0.5s ease;
     }
-
-    h2 {
-      margin-bottom: 30px;
-      font-size: 32px;
-      font-weight: 600;
-      transition: opacity 0.4s ease;
-    }
+    .container.hidden { opacity:0; pointer-events:none; }
 
     .btn {
-      display: inline-block;
-      margin: 10px;
-      padding: 14px 28px;
-      font-size: 18px;
+      display:inline-block;
+      margin:10px;
+      padding:14px 28px;
+      font-size:18px;
+      color:black;
+      background:linear-gradient(45deg, #FFCBA4, #F4D03F);
+      border:none;
+      border-radius:30px;
+      text-decoration:none;
+      cursor:pointer;
+      transition:transform 0.3s ease;
+    }
+    .btn:hover { transform:scale(1.05); }
+
+    .admin-ui {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #E7E8D1;
       color: black;
-      background: linear-gradient(45deg, #FFCBA4 , #F4D03F);
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      text-decoration: none;
-      opacity: 1;
-      transition: opacity 0.5s ease, transform 0.3s ease;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    .fade-out {
-      opacity: 0 !important;
-      pointer-events: none;
-    }
-
-    .admin-reveal {
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
       opacity: 0;
-      animation: fadeIn 0.7s ease forwards;
-      margin-top: 0;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
     }
 
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-      }
+    .admin-btn {
+      background:black;
+      color:#E7E8D1;
+      padding:14px 28px;
+      border-radius:30px;
+      font-size:18px;
+      text-decoration:none;
+      display:inline-block;
+      margin-top:20px;
+      transition:transform 0.3s ease;
     }
-
-    @media (max-width: 500px) {
-      .btn {
-        width: 100%;
-        margin: 10px 0;
-      }
-    }
+    .admin-btn:hover { transform:scale(1.05); }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2 id="portalTitle">Welcome to the Login Portal</h2>
+
+  <canvas id="glassCanvas"></canvas>
+
+  <div class="container" id="mainContainer">
+    <h2>Welcome to the Login Portal</h2>
     <div id="buttonGroup">
-      <a href="student/student_entry.php" class="btn student">Student Login</a>
-      <a href="teacher/teacher_login.php" class="btn teacher">Teacher Login</a>
+      <a href="student/student_entry.php" class="btn">Student Login</a>
+      <a href="teacher/teacher_login.php" class="btn">Teacher Login</a>
     </div>
   </div>
+
+  <div class="admin-ui" id="adminUI">
+    <h2>Welcome, Admin</h2>
+    <a href="./admin/admin_login.php" class="admin-btn">Admin Login</a>
+  </div>
+
+
 </body>
 </html>
-  <script>
-    const secretCode = 'admin123';  // ← Set your secret code here
-    let typed = '';
+<script>
+  const secretCode = 'admin123';
+  let typed = '';
 
-    window.addEventListener('keydown', (e) => {
-      typed += e.key;
-      if (typed.length > secretCode.length) {
-        typed = typed.slice(-secretCode.length);
-      }
+  const canvas = document.getElementById('glassCanvas');
+  const ctx = canvas.getContext('2d');
+  const container = document.getElementById('mainContainer');
+  const adminUI = document.getElementById('adminUI');
 
-      if (typed === secretCode) {
-        showAdminLogin();
-      }
-    });
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
 
-    function showAdminLogin() {
-      // Fade out existing buttons
-      const btnGroup = document.getElementById('buttonGroup');
-      const buttons = btnGroup.querySelectorAll('.btn');
-      buttons.forEach(btn => btn.classList.add('fade-out'));
-
-      // Create admin button
-      const adminBtn = document.createElement('a');
-      adminBtn.href = 'admin/admin_login.php';
-      adminBtn.className = 'btn admin-reveal';
-      adminBtn.textContent = 'Admin Login';
-
-      // After a short delay to let fade-out complete
-      setTimeout(() => {
-        btnGroup.remove();
-        document.querySelector('.container').appendChild(adminBtn);
-      }, 600);
+  window.addEventListener('keydown', e => {
+    typed += e.key;
+    if (typed.length > secretCode.length) typed = typed.slice(-secretCode.length);
+    if (typed === secretCode) {
+      shatterThenRebuild();
     }
-  </script>
+  });
+
+  function shatterThenRebuild() {
+    canvas.style.display = 'block';
+    container.classList.add('hidden');
+
+    const shards = [];
+    const rows = 12, cols = 16;
+    const w = canvas.width / cols, h = canvas.height / rows;
+
+    // Step 1: Create "explode" shards
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const px = x * w, py = y * h;
+        const vx = (Math.random() - 0.5) * 12;
+        const vy = (Math.random() - 0.5) * 12;
+        shards.push({
+          sizeX: w,
+          sizeY: h,
+          cx: px + w / 2,
+          cy: py + h / 2,
+          vx,
+          vy,
+          startX: px + w / 2,
+          startY: py + h / 2,
+          endX: px + vx * 100,
+          endY: py + vy * 100
+        });
+      }
+    }
+
+    let step = 0, total = 100;
+
+    function animateExplode() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = step / total;
+      shards.forEach(s => {
+        const x = s.startX + (s.endX - s.startX) * t;
+        const y = s.startY + (s.endY - s.startY) * t;
+        const opacity = 1 - t;
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = '#fff';
+        ctx.translate(x, y);
+        ctx.fillRect(0, 0, s.sizeX, s.sizeY);
+        ctx.restore();
+      });
+
+      step++;
+      if (step <= total) {
+        requestAnimationFrame(animateExplode);
+      } else {
+        document.body.style.background = 'linear-gradient(135deg, #E7E8D1 0%, #000 100%)';
+        setTimeout(() => animateImplode(shards), 300);
+      }
+    }
+
+    function animateImplode(shards) {
+      step = 0;
+      // Reverse start/end
+      shards.forEach(s => {
+        const tempX = s.startX;
+        const tempY = s.startY;
+        s.startX = s.endX;
+        s.startY = s.endY;
+        s.endX = tempX;
+        s.endY = tempY;
+      });
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const t = step / total;
+        shards.forEach(s => {
+          const x = s.startX + (s.endX - s.startX) * t;
+          const y = s.startY + (s.endY - s.startY) * t;
+          const opacity = t;
+          ctx.save();
+          ctx.globalAlpha = opacity;
+          ctx.fillStyle = '#fff';
+          ctx.translate(x, y);
+          ctx.fillRect(0, 0, s.sizeX, s.sizeY);
+          ctx.restore();
+        });
+
+        step++;
+        if (step <= total) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.style.display = 'none';
+          adminUI.style.display = 'block';
+          adminUI.style.opacity = '1';
+          adminUI.style.pointerEvents = 'auto';
+        }
+      }
+      animate();
+    }
+
+    animateExplode();
+  }
+</script>

@@ -80,7 +80,6 @@ if (isset($_SESSION['student_roll'])) {
 </body>
 </html>
 <?php
-session_start();
 require_once '../db/db.php'; // Include database connection
 require_once '../error.php'; // Include error handling
 

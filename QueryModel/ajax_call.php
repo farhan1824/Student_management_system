@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //     echo "Unauthorized access.";
     //     exit();
     // }
-    if (!isset($_SESSION['student_roll']) && !isset($_SESSION['teacher_number'])&& !isset($_SESSION["register_student_roll"])) {
+    if (!isset($_SESSION['student_roll']) && !isset($_SESSION['teacher_number'])&& !isset($_SESSION["register_student_roll"])&& !isset($_POST['request_id'])&& !isset($_POST['status'])&& !isset($_POST['teacher_num'])&&!isset($_POST['subject_ids'])) {
     http_response_code(403);
     echo "Unauthorized access.";
     exit();
@@ -62,11 +62,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
         case 'save_selected_subjects':
-    if (isset($_SESSION['register_student_roll'])) {
-        studentSubjectSelect($conn);
+            if (isset($_SESSION['register_student_roll'])) {
+                studentSubjectSelect($conn);
+            } else {
+                http_response_code(403);
+                echo "Session expired.";
+            }
+            break;
+
+       case 'update_correction_status':
+
+    if (isset($_POST['request_id'], $_POST['status'])) {
+        $requestId = $_POST['request_id'];
+        $status = $_POST['status'];
+
+        $result = updateCorrectionRequestStatus($conn, $requestId, $status);
+
+        if ($result['success']) {
+            echo $result['message'];
+        } else {
+            http_response_code(400);
+            echo $result['message'];
+        }
     } else {
-        http_response_code(403);
-        echo "Session expired.";
+        http_response_code(400);
+        echo "Missing parameters.";
+    }
+ case 'assign_subjects':
+    if (isset($_POST['teacher_num'], $_POST['subject_ids']) && is_array($_POST['subject_ids'])) {
+        $teacherNum = $_POST['teacher_num']; // Don't cast to int
+        $subjectIds = array_map('intval', $_POST['subject_ids']); // subject_ids are integers
+        $result = assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds);
+
+        if ($result['success']) {
+            echo $result['message'];
+        } else {
+            http_response_code(400);
+            echo $result['message'];
+        }
+    } else {
+        http_response_code(400);
+        echo "Missing or invalid parameters.";
     }
     break;
 

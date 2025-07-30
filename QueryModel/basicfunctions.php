@@ -428,6 +428,55 @@ function studentSubjectSelect($conn) {
     echo "Subjects saved successfully.";
 }
 
+function updateCorrectionRequestStatus($conn, $requestId, $newStatus) {
+    // Sanitize input
+    $requestId = intval($requestId);
+    $allowedStatuses = ['approved', 'rejected'];
+
+    if (!in_array($newStatus, $allowedStatuses)) {
+        return ['success' => false, 'message' => 'Invalid status provided.'];
+    }
+
+    // Prepare and execute update
+    $stmt = $conn->prepare("UPDATE correction_requests SET status = ? WHERE id = ?");
+    $stmt->bind_param("si", $newStatus, $requestId);
+
+    if ($stmt->execute()) {
+        return ['success' => true, 'message' => "Correction request has been {$newStatus}."];
+    } else {
+        return ['success' => false, 'message' => 'Database update failed.'];
+    }
+}
+
+function assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds) {
+    $inserted = 0;
+    $skipped = 0;
+
+    foreach ($subjectIds as $subjectId) {
+        // Skip if already assigned
+        $check = $conn->prepare("SELECT id FROM teacher_subjects WHERE teacher_num = ? AND subject_id = ?");
+        $check->bind_param("si", $teacherNum, $subjectId); // 's' for string, 'i' for int
+        $check->execute();
+        $check->store_result();
+
+        if ($check->num_rows > 0) {
+            $skipped++;
+            continue;
+        }
+
+        $insert = $conn->prepare("INSERT INTO teacher_subjects (teacher_num, subject_id) VALUES (?, ?)");
+        $insert->bind_param("si", $teacherNum, $subjectId); // 's' for string, 'i' for int
+        if ($insert->execute()) {
+            $inserted++;
+        }
+    }
+
+    return [
+        'success' => true,
+        'message' => "{$inserted} subject(s) assigned. {$skipped} duplicate(s) skipped."
+    ];
+}
+
 
 ?>
 

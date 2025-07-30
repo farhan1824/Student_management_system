@@ -129,7 +129,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: teacher_dashboard.php");
         exit();
     } else {
-       header("Location: ../error.php?error=invalid_teacher_login");
+       header("Location:teacher_login.php?error=invalid_teacher_login");
         exit();
     }
     }

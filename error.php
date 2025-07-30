@@ -10,6 +10,8 @@ $errorMessages = [
     "user_exists"          => "User already exists with this email.",
     "invalid_email"         => "Invalid email format.",
     "photo_upload_error"    => "Failed to upload photo. Please try again.",
+    "password_mismatch"     => "Passwords do not match.",
+    "admin_not_found"       => "Admin not found.",
 ];
 
 // Show only if a valid error exists

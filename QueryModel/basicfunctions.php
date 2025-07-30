@@ -429,15 +429,14 @@ function studentSubjectSelect($conn) {
 }
 
 function updateCorrectionRequestStatus($conn, $requestId, $newStatus) {
-    // Sanitize input
-    $requestId = intval($requestId);
-    $allowedStatuses = ['approved', 'rejected'];
+    $requestId = (int) trim($requestId);
+    $newStatus = strtolower(trim($newStatus));
 
+    $allowedStatuses = ['approved', 'rejected'];
     if (!in_array($newStatus, $allowedStatuses)) {
         return ['success' => false, 'message' => 'Invalid status provided.'];
     }
 
-    // Prepare and execute update
     $stmt = $conn->prepare("UPDATE correction_requests SET status = ? WHERE id = ?");
     $stmt->bind_param("si", $newStatus, $requestId);
 
@@ -448,24 +447,28 @@ function updateCorrectionRequestStatus($conn, $requestId, $newStatus) {
     }
 }
 
-function assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds) {
-    $inserted = 0;
-    $skipped = 0;
 
+function assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds) {
     foreach ($subjectIds as $subjectId) {
-        // Skip if already assigned
+        // Check if already assigned
         $check = $conn->prepare("SELECT id FROM teacher_subjects WHERE teacher_num = ? AND subject_id = ?");
-        $check->bind_param("si", $teacherNum, $subjectId); // 's' for string, 'i' for int
+        $check->bind_param("si", $teacherNum, $subjectId);
         $check->execute();
         $check->store_result();
 
         if ($check->num_rows > 0) {
-            $skipped++;
-            continue;
+            return [
+                'success' => false,
+                'message' => "Subject ID {$subjectId} is already assigned to this teacher."
+            ];
         }
+    }
 
+    // If all are new, insert them
+    $inserted = 0;
+    foreach ($subjectIds as $subjectId) {
         $insert = $conn->prepare("INSERT INTO teacher_subjects (teacher_num, subject_id) VALUES (?, ?)");
-        $insert->bind_param("si", $teacherNum, $subjectId); // 's' for string, 'i' for int
+        $insert->bind_param("si", $teacherNum, $subjectId);
         if ($insert->execute()) {
             $inserted++;
         }
@@ -473,8 +476,70 @@ function assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds) {
 
     return [
         'success' => true,
-        'message' => "{$inserted} subject(s) assigned. {$skipped} duplicate(s) skipped."
+        'message' => "{$inserted} subject(s) successfully assigned to the teacher."
     ];
+}
+function updateAttendanceIfApproved($conn, $requestId) {
+    // Step 1: Get correction request details
+    $query = $conn->prepare("
+        SELECT 
+            c.submitted_by_id, 
+            c.subject_id, 
+            c.attendance_date, 
+            c.reason_type, 
+            s.id AS student_id
+        FROM correction_requests c
+        JOIN students s ON c.submitted_by_id = s.roll
+        WHERE c.id = ?
+        LIMIT 1
+    ");
+    $query->bind_param("i", $requestId);
+    $query->execute();
+    $res = $query->get_result();
+
+    if (!$row = $res->fetch_assoc()) {
+        return ['success' => false, 'message' => 'Correction request not found.'];
+    }
+
+    if (strtolower(trim($row['reason_type'])) !== 'attendance') {
+        return ['success' => false, 'message' => 'Not an attendance-related request.'];
+    }
+
+    $studentId = (int) $row['student_id'];
+    $subjectId = (int) $row['subject_id'];
+    $date = $row['attendance_date'];
+
+    // Step 2: Check if attendance record already exists
+    $check = $conn->prepare("
+        SELECT id FROM student_attendance 
+        WHERE student_id = ? AND subject_id = ? AND attendance_date = ?
+    ");
+    $check->bind_param("iis", $studentId, $subjectId, $date);
+    $check->execute();
+    $checkRes = $check->get_result();
+
+    if ($checkRes->num_rows > 0) {
+        // Update existing attendance record to Present
+        $update = $conn->prepare("
+            UPDATE student_attendance 
+            SET status = 'Present' 
+            WHERE student_id = ? AND subject_id = ? AND attendance_date = ?
+        ");
+        $update->bind_param("iis", $studentId, $subjectId, $date);
+        $update->execute();
+
+        return ['success' => true, 'message' => 'Attendance status updated to Present.'];
+    } else {
+        // Insert new record as Present
+        $insert = $conn->prepare("
+            INSERT INTO student_attendance (student_id, subject_id, attendance_date, status) 
+            VALUES (?, ?, ?, 'Present')
+        ");
+        $insert->bind_param("iis", $studentId, $subjectId, $date);
+        $insert->execute();
+
+        return ['success' => true, 'message' => 'Attendance record inserted as Present.'];
+    }
 }
 
 

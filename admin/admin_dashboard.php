@@ -373,8 +373,11 @@ while ($row = $subjectResult->fetch_assoc()) {
   </div>
 
   <?php if (empty($studentRequests)): ?>
-    <div style="padding: 20px; color: #333; text-align: center;">
-      No pending correction requests from students.
+
+       <div class="sweet-alert-message">
+      <span class="icon">✔️</span>
+      <span>All Student correction requests have been reviewed successfully!</span>
+
     </div>
   <?php else: ?>
     <?php foreach ($studentRequests as $req): ?>
@@ -472,48 +475,66 @@ while ($row = $subjectResult->fetch_assoc()) {
     const content = headerElem.nextElementSibling;
     content.classList.toggle('open');
   }
+function handleActionTeacher(status, requestId, button) {
+  fetch('../QueryModel/ajax_call.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+          action: 'update_correction_status',
+          request_id: requestId,
+          status: status
+      })
+  })
+  .then(response => {
+      if (!response.ok) throw new Error('Correction request already processed');
+      return response.text();
+  })
+  .then(data => {
+      Swal.fire({
+          icon: 'success',
+          title: `Request ${status === 'approved' ? 'Approved' : 'Rejected'}!`,
+          text: data,
+          timer: 1800,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+      });
 
-  function handleActionTeacher(status, requestId, button) {
-    fetch('../QueryModel/ajax_call.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            action: 'update_correction_status',
-            request_id: requestId,
-            status: status
-        })
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Server error');
-        return response.text();
-    })
-    .then(data => {
-        Swal.fire({
-            icon: 'success',
-            title: `Request ${status === 'approved' ? 'Approved' : 'Rejected'}!`,
-            text: data,
-            timer: 1800,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
+      // Remove the complaint box from the UI
+      const complaintBox = button.closest('.complaint');
+      if (complaintBox) {
+          const drawerContent = complaintBox.parentElement; // drawer-content div
+          complaintBox.remove();
 
-        // ✅ Remove the complaint box from the UI
-        const complaintBox = button.closest('.complaint');
-        if (complaintBox) complaintBox.remove();
-    })
-    .catch(error => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: error.message,
-            timer: 2500,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-    });
-  }
+          // If no complaints remain, remove the entire drawer (teacher + complaints)
+          if (drawerContent.children.length === 0) {
+              const drawer = drawerContent.parentElement; // drawer div
+              if (drawer) drawer.remove();
+
+              // Optional: if you want to show the "All reviewed" message dynamically:
+              const teacherRequestsCard = document.getElementById('teacher-requests-card');
+              if (teacherRequestsCard && teacherRequestsCard.querySelectorAll('.drawer').length === 0) {
+                  // Show your "all reviewed" message if you want
+                  const messageDiv = document.createElement('div');
+                  messageDiv.className = 'sweet-alert-message';
+                  messageDiv.innerHTML = '<span class="icon">✔️</span> <span>All teacher correction requests have been reviewed successfully!</span>';
+                  teacherRequestsCard.appendChild(messageDiv);
+              }
+          }
+      }
+  })
+  .catch(error => {
+      Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: error.message,
+          timer: 2500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+      });
+  });
+}
 
   function handleActionStudent(status, requestId, button) {
     fetch('../QueryModel/ajax_call.php', {
@@ -526,7 +547,7 @@ while ($row = $subjectResult->fetch_assoc()) {
         })
     })
     .then(response => {
-        if (!response.ok) throw new Error('Server error');
+        if (!response.ok) throw new Error('Correction request already processed');
         return response.text();
     })
     .then(data => {
@@ -578,7 +599,7 @@ while ($row = $subjectResult->fetch_assoc()) {
   }
 
 
-function assignSubject(event) {
+  function assignSubject(event) {
   event.preventDefault();
 
   const teacherId = document.getElementById('teacherSelect').value;
@@ -610,7 +631,7 @@ function assignSubject(event) {
     body: formData
   })
   .then(response => {
-    if (!response.ok) throw new Error('Assignment failed.');
+    if (!response.ok) throw new Error('Already Choosen this subject');
     return response.text();
   })
   .then(data => {
@@ -643,7 +664,7 @@ function assignSubject(event) {
   });
 
   return false;
-}
+  }
 
 
 </script>

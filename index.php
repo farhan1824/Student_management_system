@@ -95,112 +95,67 @@
     </div>
   </div>
 
-  <div class="admin-ui" id="adminUI">
-    <h2>Welcome, Admin</h2>
-    <a href="./admin/admin_login.php" class="admin-btn">Admin Login</a>
-  </div>
+  <script>
+    const secretCode = 'admin123';
+    let typed = '';
 
+    const canvas = document.getElementById('glassCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('mainContainer');
+    let adminUI; // Will be created dynamically
 
-</body>
-</html>
-<script>
-  const secretCode = 'admin123';
-  let typed = '';
-
-  const canvas = document.getElementById('glassCanvas');
-  const ctx = canvas.getContext('2d');
-  const container = document.getElementById('mainContainer');
-  const adminUI = document.getElementById('adminUI');
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  window.addEventListener('keydown', e => {
-    typed += e.key;
-    if (typed.length > secretCode.length) typed = typed.slice(-secretCode.length);
-    if (typed === secretCode) {
-      shatterThenRebuild();
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
-  });
+    window.addEventListener('resize', resize);
+    resize();
 
-  function shatterThenRebuild() {
-    canvas.style.display = 'block';
-    container.classList.add('hidden');
-
-    const shards = [];
-    const rows = 12, cols = 16;
-    const w = canvas.width / cols, h = canvas.height / rows;
-
-    // Step 1: Create "explode" shards
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const px = x * w, py = y * h;
-        const vx = (Math.random() - 0.5) * 12;
-        const vy = (Math.random() - 0.5) * 12;
-        shards.push({
-          sizeX: w,
-          sizeY: h,
-          cx: px + w / 2,
-          cy: py + h / 2,
-          vx,
-          vy,
-          startX: px + w / 2,
-          startY: py + h / 2,
-          endX: px + vx * 100,
-          endY: py + vy * 100
-        });
+    window.addEventListener('keydown', e => {
+      typed += e.key;
+      if (typed.length > secretCode.length) typed = typed.slice(-secretCode.length);
+      if (typed === secretCode) {
+        shatterThenRebuild();
       }
-    }
+    });
 
-    let step = 0, total = 100;
+    function shatterThenRebuild() {
+      canvas.style.display = 'block';
+      container.classList.add('hidden');
 
-    function animateExplode() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const t = step / total;
-      shards.forEach(s => {
-        const x = s.startX + (s.endX - s.startX) * t;
-        const y = s.startY + (s.endY - s.startY) * t;
-        const opacity = 1 - t;
-        ctx.save();
-        ctx.globalAlpha = opacity;
-        ctx.fillStyle = '#fff';
-        ctx.translate(x, y);
-        ctx.fillRect(0, 0, s.sizeX, s.sizeY);
-        ctx.restore();
-      });
+      const shards = [];
+      const rows = 12, cols = 16;
+      const w = canvas.width / cols, h = canvas.height / rows;
 
-      step++;
-      if (step <= total) {
-        requestAnimationFrame(animateExplode);
-      } else {
-        document.body.style.background = 'linear-gradient(135deg, #E7E8D1 0%, #000 100%)';
-        setTimeout(() => animateImplode(shards), 300);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const px = x * w, py = y * h;
+          const vx = (Math.random() - 0.5) * 12;
+          const vy = (Math.random() - 0.5) * 12;
+          shards.push({
+            sizeX: w,
+            sizeY: h,
+            cx: px + w / 2,
+            cy: py + h / 2,
+            vx,
+            vy,
+            startX: px + w / 2,
+            startY: py + h / 2,
+            endX: px + vx * 100,
+            endY: py + vy * 100
+          });
+        }
       }
-    }
 
-    function animateImplode(shards) {
-      step = 0;
-      // Reverse start/end
-      shards.forEach(s => {
-        const tempX = s.startX;
-        const tempY = s.startY;
-        s.startX = s.endX;
-        s.startY = s.endY;
-        s.endX = tempX;
-        s.endY = tempY;
-      });
+      let step = 0, total = 100;
 
-      function animate() {
+      function animateExplode() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const t = step / total;
         shards.forEach(s => {
           const x = s.startX + (s.endX - s.startX) * t;
           const y = s.startY + (s.endY - s.startY) * t;
-          const opacity = t;
+          const opacity = 1 - t;
           ctx.save();
           ctx.globalAlpha = opacity;
           ctx.fillStyle = '#fff';
@@ -211,17 +166,74 @@
 
         step++;
         if (step <= total) {
-          requestAnimationFrame(animate);
+          requestAnimationFrame(animateExplode);
         } else {
-          canvas.style.display = 'none';
-          adminUI.style.display = 'block';
-          adminUI.style.opacity = '1';
-          adminUI.style.pointerEvents = 'auto';
+          document.body.style.background = 'linear-gradient(135deg, #E7E8D1 0%, #000 100%)';
+          setTimeout(() => animateImplode(shards), 300);
         }
       }
-      animate();
+
+      function animateImplode(shards) {
+        step = 0;
+        shards.forEach(s => {
+          const tempX = s.startX;
+          const tempY = s.startY;
+          s.startX = s.endX;
+          s.startY = s.endY;
+          s.endX = tempX;
+          s.endY = tempY;
+        });
+
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const t = step / total;
+          shards.forEach(s => {
+            const x = s.startX + (s.endX - s.startX) * t;
+            const y = s.startY + (s.endY - s.startY) * t;
+            const opacity = t;
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = '#fff';
+            ctx.translate(x, y);
+            ctx.fillRect(0, 0, s.sizeX, s.sizeY);
+            ctx.restore();
+          });
+
+          step++;
+          if (step <= total) {
+            requestAnimationFrame(animate);
+          } else {
+            canvas.style.display = 'none';
+            showAdminUI(); // call the dynamic builder
+          }
+        }
+        animate();
+      }
+
+      animateExplode();
     }
 
-    animateExplode();
-  }
-</script>
+    function showAdminUI() {
+      adminUI = document.createElement('div');
+      adminUI.className = 'admin-ui';
+      adminUI.style.display = 'block';
+      adminUI.style.opacity = '0';
+      adminUI.style.pointerEvents = 'none';
+
+      adminUI.innerHTML = `
+        <h2>Welcome, Admin</h2>
+        <a href="./admin/admin_login.php" class="admin-btn">Admin Login</a>
+      `;
+
+      document.body.appendChild(adminUI);
+
+      // Trigger fade-in
+      setTimeout(() => {
+        adminUI.style.opacity = '1';
+        adminUI.style.pointerEvents = 'auto';
+      }, 100);
+    }
+  </script>
+
+</body>
+</html>

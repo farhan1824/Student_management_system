@@ -70,24 +70,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
 
-       case 'update_correction_status':
-
-    if (isset($_POST['request_id'], $_POST['status'])) {
+    case 'update_correction_status':
+    if (!empty($_POST['request_id']) && !empty($_POST['status'])) {
         $requestId = $_POST['request_id'];
         $status = $_POST['status'];
 
         $result = updateCorrectionRequestStatus($conn, $requestId, $status);
-
-        if ($result['success']) {
-            echo $result['message'];
-        } else {
-            http_response_code(400);
-            echo $result['message'];
+        if ($result['success'] && $status === 'approved') {
+            updateAttendanceIfApproved($conn, $requestId);
         }
+
+        echo $result['message'];
     } else {
-        http_response_code(400);
-        echo "Missing parameters.";
+        echo "Request ID or status missing.";
     }
+    break;
+
+
+
  case 'assign_subjects':
     if (isset($_POST['teacher_num'], $_POST['subject_ids']) && is_array($_POST['subject_ids'])) {
         $teacherNum = $_POST['teacher_num']; // Don't cast to int

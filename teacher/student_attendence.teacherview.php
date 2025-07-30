@@ -29,6 +29,8 @@ $studentSql = "
     INNER JOIN student_subjects ss ON ss.student_id = s.id
     WHERE ss.subject_id = $subjectId
 ";
+
+
 $students = $conn->query($studentSql);
 ?>
 <!DOCTYPE html>
@@ -172,16 +174,17 @@ $students = $conn->query($studentSql);
                                    <?php echo $row['attended'] ? 'checked disabled' : ''; ?>
                                >
                            <?php else: ?>
-                               <!-- For past, show present/absent and correction button -->
                                <?php
                                    if ($row['attended']) {
                                        echo "<strong style='color:green;'>Present</strong>";
-                                   } else {
-                                       echo "<strong style='color:red;'>Absent</strong>";
-                                   }
-                               ?>
-                               <br>
-                               <button onclick="requestCorrection(<?php echo $row['id']; ?>)" class="correction-btn">Request Correction</button>
+                                   } 
+
+
+                             else {
+                                       echo "<strong style='color:red;'>Absent</strong>";?>
+                                       <br>
+                                <button onclick="requestCorrection(<?php echo $row['id']; ?>)" class="correction-btn">Request Correction</button>
+                                  <?php } ?>
                            <?php endif; ?>
                     </td>
 

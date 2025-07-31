@@ -483,13 +483,12 @@ function updateAttendanceIfApproved($conn, $requestId) {
     // Step 1: Get correction request details
     $query = $conn->prepare("
         SELECT 
-            c.submitted_by_id, 
+            c.student_id,
             c.subject_id, 
             c.attendance_date, 
             c.reason_type, 
-            s.id AS student_id
+            c.requested_by
         FROM correction_requests c
-        JOIN students s ON c.submitted_by_id = s.roll
         WHERE c.id = ?
         LIMIT 1
     ");
@@ -501,15 +500,19 @@ function updateAttendanceIfApproved($conn, $requestId) {
         return ['success' => false, 'message' => 'Correction request not found.'];
     }
 
-    if (strtolower(trim($row['reason_type'])) !== 'attendance') {
-        return ['success' => false, 'message' => 'Not an attendance-related request.'];
+    // Only continue if this is an attendance-related correction from a teacher
+    if (
+        strtolower(trim($row['reason_type'])) !== 'attendance' ||
+        strtolower(trim($row['requested_by'])) !== 'teacher'
+    ) {
+        return ['success' => false, 'message' => 'Not a valid teacher attendance correction.'];
     }
 
     $studentId = (int) $row['student_id'];
     $subjectId = (int) $row['subject_id'];
     $date = $row['attendance_date'];
 
-    // Step 2: Check if attendance record already exists
+    // Step 2: Check if attendance already exists
     $check = $conn->prepare("
         SELECT id FROM student_attendance 
         WHERE student_id = ? AND subject_id = ? AND attendance_date = ?
@@ -519,7 +522,7 @@ function updateAttendanceIfApproved($conn, $requestId) {
     $checkRes = $check->get_result();
 
     if ($checkRes->num_rows > 0) {
-        // Update existing attendance record to Present
+        // Update existing attendance record
         $update = $conn->prepare("
             UPDATE student_attendance 
             SET status = 'Present' 
@@ -528,9 +531,9 @@ function updateAttendanceIfApproved($conn, $requestId) {
         $update->bind_param("iis", $studentId, $subjectId, $date);
         $update->execute();
 
-        return ['success' => true, 'message' => 'Attendance status updated to Present.'];
+        return ['success' => true, 'message' => 'Attendance updated to Present.'];
     } else {
-        // Insert new record as Present
+        // Insert new attendance record
         $insert = $conn->prepare("
             INSERT INTO student_attendance (student_id, subject_id, attendance_date, status) 
             VALUES (?, ?, ?, 'Present')
@@ -541,6 +544,7 @@ function updateAttendanceIfApproved($conn, $requestId) {
         return ['success' => true, 'message' => 'Attendance record inserted as Present.'];
     }
 }
+
 
 
 ?>

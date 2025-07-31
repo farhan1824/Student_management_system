@@ -184,7 +184,7 @@ $students = $conn->query($studentSql);
                                        echo "<strong style='color:red;'>Absent</strong>";?>
                                        <br>
                                 <button onclick="requestCorrection(<?php echo $row['id']; ?>)" class="correction-btn">Request Correction</button>
-                                  <?php } ?>
+                                  <?php } ?>z
                            <?php endif; ?>
                     </td>
 

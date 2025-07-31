@@ -76,12 +76,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = $_POST['status'];
 
         $result = updateCorrectionRequestStatus($conn, $requestId, $status);
+        // var_dump($result,$status);
+        // die();
         if ($result['success'] && $status === 'approved') {
-            updateAttendanceIfApproved($conn, $requestId);
+           $stmt = $conn->prepare("SELECT requested_by FROM correction_requests WHERE id = ?");
+           $stmt->bind_param("i", $requestId);
+           $stmt->execute();
+           $res = $stmt->get_result();
+
+           if ($row = $res->fetch_assoc()) {
+               var_dump($row['requested_by']); // 👈 Add this
+               if (strtolower($row['requested_by']) === 'teacher') {
+                   $attnResult = updateAttendanceIfApproved($conn, $requestId);
+                   var_dump($attnResult); // 👈 Add this
+                   die(); // 👈 Check the flow
+               }
+           }
         }
 
+
         echo $result['message'];
-    } else {
+    } 
+    
+    else {
         echo "Request ID or status missing.";
     }
     break;

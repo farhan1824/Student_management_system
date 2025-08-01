@@ -327,15 +327,15 @@ function allCheckAndInsertData($firstName, $middleName, $lastName, $dob, $gender
     // function allCheckAndInsertData($firstName, $middleName, $lastName, $photoFilename, $dob, $gender, $nationality, $birthCountry, $email, $conn) {
     // Check required inputs
     if (isInputEmpty($firstName, $lastName, $dob, $gender, $nationality, $birthCountry, $email)) {
-        header("Location: student_register.php?error=empty_fields");
+        header("Location: student_register.php?error=student_empty_fields");
         exit();
     }
     if (!isValidEmail($email)) {
-        header("Location: student_register.php?error=invalid_email");
+        header("Location: student_register.php?error=student_invalid_email");
         exit();
     }
     if (userExists($conn, $email)) {
-        header("Location: student_register.php?error=user_exists");
+        header("Location: student_register.php?error=student_user_exists");
         exit();
     }
 

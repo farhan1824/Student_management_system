@@ -115,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $teacherNumber = $conn->real_escape_string($teacherNumber);
     $passwordInput = $conn->real_escape_string($passwordInput);
     if (isInputEmpty($teacherNumber, $passwordInput)) {
-        header("Location: teacher_login.php?error=empty_fields");
+        header("Location: teacher_login.php?error=teach_empty_fields");
         exit();
     } else {
         // Query

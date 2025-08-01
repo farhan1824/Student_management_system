@@ -1,56 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login Portal</title>
   <style>
-    * { box-sizing: border-box; margin:0; padding:0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      height:100vh;
+      height: 100vh;
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #2C3E50 0%, #9B59B6 100%);
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      overflow:hidden;
-      color:#fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      color: #fff;
       transition: background 1s ease;
     }
+
     #glassCanvas {
-      position:fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      z-index:999;
-      display:none;
-      pointer-events:none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999;
+      display: none;
+      pointer-events: none;
     }
+
     .container {
-      text-align:center;
-      padding:40px;
-      background: rgba(255,255,255,0.1);
-      border-radius:20px;
+      text-align: center;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
       backdrop-filter: blur(10px);
-      box-shadow:0 8px 20px rgba(0,0,0,0.2);
-      z-index:1;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      z-index: 1;
       transition: opacity 0.5s ease;
     }
-    .container.hidden { opacity:0; pointer-events:none; }
+
+    .container.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
 
     .btn {
-      display:inline-block;
-      margin:10px;
-      padding:14px 28px;
-      font-size:18px;
-      color:black;
-      background:linear-gradient(45deg, #FFCBA4, #F4D03F);
-      border:none;
-      border-radius:30px;
-      text-decoration:none;
-      cursor:pointer;
-      transition:transform 0.3s ease;
+      display: inline-block;
+      margin: 10px;
+      padding: 14px 28px;
+      font-size: 18px;
+      color: black;
+      background: linear-gradient(45deg, #FFCBA4, #F4D03F);
+      border: none;
+      border-radius: 30px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.3s ease;
     }
-    .btn:hover { transform:scale(1.05); }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
 
     .admin-ui {
       position: absolute;
@@ -70,19 +87,23 @@
     }
 
     .admin-btn {
-      background:black;
-      color:#E7E8D1;
-      padding:14px 28px;
-      border-radius:30px;
-      font-size:18px;
-      text-decoration:none;
-      display:inline-block;
-      margin-top:20px;
-      transition:transform 0.3s ease;
+      background: black;
+      color: #E7E8D1;
+      padding: 14px 28px;
+      border-radius: 30px;
+      font-size: 18px;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 20px;
+      transition: transform 0.3s ease;
     }
-    .admin-btn:hover { transform:scale(1.05); }
+
+    .admin-btn:hover {
+      transform: scale(1.05);
+    }
   </style>
 </head>
+
 <body>
 
   <canvas id="glassCanvas"></canvas>
@@ -124,12 +145,15 @@
       container.classList.add('hidden');
 
       const shards = [];
-      const rows = 12, cols = 16;
-      const w = canvas.width / cols, h = canvas.height / rows;
+      const rows = 12,
+        cols = 16;
+      const w = canvas.width / cols,
+        h = canvas.height / rows;
 
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const px = x * w, py = y * h;
+          const px = x * w,
+            py = y * h;
           const vx = (Math.random() - 0.5) * 12;
           const vy = (Math.random() - 0.5) * 12;
           shards.push({
@@ -147,7 +171,8 @@
         }
       }
 
-      let step = 0, total = 100;
+      let step = 0,
+        total = 100;
 
       function animateExplode() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -236,4 +261,5 @@
   </script>
 
 </body>
+
 </html>

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Login</title>
   <style>
     * {
@@ -88,70 +89,71 @@
       font-size: 14px;
       color: #444;
     }
-
   </style>
 </head>
+
 <body>
 
   <div class="login-card">
     <h2>Admin Panel Login</h2>
-   <form action="admin_login.php" method="POST">
-  <div class="input-group">
-    <label for="username_or_email">Username or Email</label>
-    <input type="text" id="username_or_email" name="username_or_email" required />
-  </div>
-  <div class="input-group">
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" required />
-  </div>
-  <button type="submit" class="login-btn">Login</button>
-</form>
+    <form action="admin_login.php" method="POST">
+      <div class="input-group">
+        <label for="username_or_email">Username or Email</label>
+        <input type="text" id="username_or_email" name="username_or_email" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+      </div>
+      <button type="submit" class="login-btn">Login</button>
+    </form>
 
     <div class="footer-note">© 2025 Secure Access</div>
   </div>
 
 </body>
+
 </html>
 <?php
 session_start();
-require_once"../error.php"; // Include error handling
+require_once "../error.php"; // Include error handling
 require_once '../db/db.php'; // DB connection
 require_once '../QueryModel/basicfunctions.php'; // has isInputEmpty()
 
 if (isset($_SESSION['admin_username'])) {
-    header("Location: admin_dashboard.php");
-    exit();
+  header("Location: admin_dashboard.php");
+  exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = trim($_POST['username_or_email']);
-    $passwordInput = trim($_POST['password']);
-  
+  $input = trim($_POST['username_or_email']);
+  $passwordInput = trim($_POST['password']);
 
-    if (isInputEmpty($input, $passwordInput)) {
-        header("Location: admin_login.php?error=empty_fields");
-        exit();
-    }
 
-    $input = $conn->real_escape_string($input);
+  if (isInputEmpty($input, $passwordInput)) {
+    header("Location: admin_login.php?error=admin_empty_fields");
+    exit();
+  }
 
-    $stmt = $conn->prepare("SELECT username, password FROM admin_info WHERE username = ? OR email = ?");
-    $stmt->bind_param("ss", $input, $input);
-    $stmt->execute();
-    $result = $stmt->get_result();
+  $input = $conn->real_escape_string($input);
 
-    if ($admin = $result->fetch_assoc()) {
-        if (password_verify(trim($_POST['password']), $admin['password'])) {
-            $_SESSION['admin_username'] = $admin['username'];
-            header("Location: admin_dashboard.php");
-            exit();
-        } else {
-            header("Location: admin_login.php?error=password_mismatch");
-            exit();
-        }
+  $stmt = $conn->prepare("SELECT username, password FROM admin_info WHERE username = ? OR email = ?");
+  $stmt->bind_param("ss", $input, $input);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  if ($admin = $result->fetch_assoc()) {
+    if (password_verify(trim($_POST['password']), $admin['password'])) {
+      $_SESSION['admin_username'] = $admin['username'];
+      header("Location: admin_dashboard.php");
+      exit();
     } else {
-        header("Location: admin_login.php?error=admin_not_found");
-        exit();
+      header("Location: admin_login.php?error=admin_password_mismatch");
+      exit();
     }
+  } else {
+    header("Location: admin_login.php?error=admin_not_found");
+    exit();
+  }
 }
 ?>

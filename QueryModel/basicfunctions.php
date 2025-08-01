@@ -4,7 +4,8 @@ require_once '../db/db.php';
 // function isInputEmpty($firstinput, $secondinput) {
 //     return empty(trim($firstinput)) || empty(trim($secondinput));
 // }
-function isInputEmpty(...$inputs) {
+function isInputEmpty(...$inputs)
+{
     foreach ($inputs as $input) {
         if (empty(trim($input))) {
             return true;
@@ -13,7 +14,8 @@ function isInputEmpty(...$inputs) {
     return false;
 }
 
-function InputTeachAttendence($conn) {
+function InputTeachAttendence($conn)
+{
     if (!isset($_SESSION['teacher_number'])) {
         http_response_code(403);
         echo "Unauthorized access.";
@@ -31,28 +33,27 @@ function InputTeachAttendence($conn) {
               AND attendance_date = '$today'";
     $res = $conn->query($check);
 
-   if ($res && $res->num_rows > 0) {
-    http_response_code(200); // ✅ Still valid response
-    echo "Attendance already marked.";
-    return;
+    if ($res && $res->num_rows > 0) {
+        http_response_code(200); // ✅ Still valid response
+        echo "Attendance already marked.";
+        return;
     }
 
     // Insert attendance
     $insert = "INSERT INTO teach_attendance (teacher_num, subject_id, attendance_date) 
                VALUES ('$teacherNumber', $subjectId, '$today')";
-    
-    if ($conn->query($insert)) 
-        {
-         http_response_code(200); // ✅ This ensures JS sees it as "ok"
-         echo "Attendance recorded successfully.";
-         } 
-    else {
-         http_response_code(500);
-         echo "Failed to record attendance: " . $conn->error;
+
+    if ($conn->query($insert)) {
+        http_response_code(200); // ✅ This ensures JS sees it as "ok"
+        echo "Attendance recorded successfully.";
+    } else {
+        http_response_code(500);
+        echo "Failed to record attendance: " . $conn->error;
     }
 }
 
-function InputStudentAttendance($conn) {
+function InputStudentAttendance($conn)
+{
     // session_start();
     if (!isset($_SESSION['teacher_number'])) {
         http_response_code(403);
@@ -99,7 +100,7 @@ function RequestAttendanceCorrection($conn)
     $subjectId = intval($_POST['subject_id']);
     $date = $conn->real_escape_string($_POST['date']);
     $reason = $conn->real_escape_string($_POST['reason']);
-    
+
     // Set reason_type as 'attendance' for teacher requests
     $reasonType = 'attendance';
 
@@ -110,7 +111,7 @@ function RequestAttendanceCorrection($conn)
                  AND attendance_date = '$date' 
                  AND reason_type = '$reasonType'
                  AND status = 'pending'";
-    
+
     $checkResult = $conn->query($checkSql);
     if ($checkResult && $checkResult->num_rows > 0) {
         echo "A correction request is already pending.";
@@ -186,7 +187,8 @@ function RequestRecheckStudent($conn)
         echo "Database error: " . $conn->error;
     }
 }
-function GetStudentSubjects($conn) {
+function GetStudentSubjects($conn)
+{
     $roll = $_SESSION['student_roll'];
     // Get student id
     $studentRes = $conn->query("SELECT id FROM students WHERE roll = '$roll'");
@@ -215,7 +217,8 @@ function GetStudentSubjects($conn) {
     header('Content-Type: application/json');
     echo json_encode($subjects);
 }
-function userExists( $conn, string $email): bool {
+function userExists($conn, string $email): bool
+{
     $stmt = $conn->prepare("SELECT id FROM students WHERE email = ?");
     if (!$stmt) {
         // Optional: log or handle error
@@ -232,11 +235,13 @@ function userExists( $conn, string $email): bool {
     return $exists;
 }
 
-function isValidEmail($email) {
+function isValidEmail($email)
+{
     return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
 }
 
-function generateFullName($first, $middle, $last) {
+function generateFullName($first, $middle, $last)
+{
     $first = trim($first);
     $middle = trim($middle);
     $last = trim($last);
@@ -250,7 +255,8 @@ function generateFullName($first, $middle, $last) {
     return $fullName;
 }
 
-function generateRoll($conn) {
+function generateRoll($conn)
+{
     do {
         $random = rand(10000, 99999);
         $roll = "CSE-" . $random;
@@ -263,12 +269,11 @@ function generateRoll($conn) {
 
         $exists = $stmt->num_rows > 0;
         $stmt->close();
-
     } while ($exists);
 
     return $roll;
 }
- 
+
 // function allCheckAndInsertData($firstName, $middleName, $lastName,$photoFilename, $dob, $gender, $nationality, $birthCountry, $email, $conn) {
 //     // Check required inputs (you can use your existing validation function)
 //     if (isInputEmpty($firstName, $lastName, $dob, $gender, $nationality, $birthCountry, $email))
@@ -306,7 +311,7 @@ function generateRoll($conn) {
 //         // Save to session
 //         $_SESSION['student_roll'] = $roll;
 //         $_SESSION['student_name'] = $fullName;
-        
+
 //         // Redirect to dashboard
 //         header("Location: student_dashboard.php");
 //         exit();
@@ -317,8 +322,9 @@ function generateRoll($conn) {
 //     $stmt->close();
 //     $conn->close();
 // }
-function allCheckAndInsertData($firstName, $middleName, $lastName, $dob, $gender, $nationality, $birthCountry, $email, $conn) {
-// function allCheckAndInsertData($firstName, $middleName, $lastName, $photoFilename, $dob, $gender, $nationality, $birthCountry, $email, $conn) {
+function allCheckAndInsertData($firstName, $middleName, $lastName, $dob, $gender, $nationality, $birthCountry, $email, $conn)
+{
+    // function allCheckAndInsertData($firstName, $middleName, $lastName, $photoFilename, $dob, $gender, $nationality, $birthCountry, $email, $conn) {
     // Check required inputs
     if (isInputEmpty($firstName, $lastName, $dob, $gender, $nationality, $birthCountry, $email)) {
         header("Location: student_register.php?error=empty_fields");
@@ -355,7 +361,7 @@ function allCheckAndInsertData($firstName, $middleName, $lastName, $dob, $gender
         $_SESSION['student_name'] = $fullName;
         // $_SESSION['first_login'] = time(); // Set first login to true
         // $_SESSION['first_login'] = true;
-        
+
         // header("Location: student_dashboard.php");
         header("Location:student_subject_choice.php");
         exit();
@@ -366,7 +372,8 @@ function allCheckAndInsertData($firstName, $middleName, $lastName, $dob, $gender
     $stmt->close();
     $conn->close();
 }
-function studentSubjectSelect($conn) {
+function studentSubjectSelect($conn)
+{
     $roll = $_SESSION['register_student_roll'];
 
     // Fetch current student info
@@ -428,7 +435,8 @@ function studentSubjectSelect($conn) {
     echo "Subjects saved successfully.";
 }
 
-function updateCorrectionRequestStatus($conn, $requestId, $newStatus) {
+function updateCorrectionRequestStatus($conn, $requestId, $newStatus)
+{
     $requestId = (int) trim($requestId);
     $newStatus = strtolower(trim($newStatus));
 
@@ -448,7 +456,8 @@ function updateCorrectionRequestStatus($conn, $requestId, $newStatus) {
 }
 
 
-function assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds) {
+function assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds)
+{
     foreach ($subjectIds as $subjectId) {
         // Check if already assigned
         $check = $conn->prepare("SELECT id FROM teacher_subjects WHERE teacher_num = ? AND subject_id = ?");
@@ -479,16 +488,18 @@ function assignMultipleSubjectsToTeacher($conn, $teacherNum, $subjectIds) {
         'message' => "{$inserted} subject(s) successfully assigned to the teacher."
     ];
 }
-function updateAttendanceIfApproved($conn, $requestId) {
+function updateAttendanceIfApproved($conn, $requestId)
+{
     // Step 1: Get correction request details
     $query = $conn->prepare("
         SELECT 
-            c.student_id,
+            c.submitted_by_id, 
             c.subject_id, 
             c.attendance_date, 
             c.reason_type, 
-            c.requested_by
+            s.id AS student_id
         FROM correction_requests c
+        JOIN students s ON c.submitted_by_id = s.roll
         WHERE c.id = ?
         LIMIT 1
     ");
@@ -500,19 +511,15 @@ function updateAttendanceIfApproved($conn, $requestId) {
         return ['success' => false, 'message' => 'Correction request not found.'];
     }
 
-    // Only continue if this is an attendance-related correction from a teacher
-    if (
-        strtolower(trim($row['reason_type'])) !== 'attendance' ||
-        strtolower(trim($row['requested_by'])) !== 'teacher'
-    ) {
-        return ['success' => false, 'message' => 'Not a valid teacher attendance correction.'];
+    if (strtolower(trim($row['reason_type'])) !== 'attendance') {
+        return ['success' => false, 'message' => 'Not an attendance-related request.'];
     }
 
     $studentId = (int) $row['student_id'];
     $subjectId = (int) $row['subject_id'];
     $date = $row['attendance_date'];
 
-    // Step 2: Check if attendance already exists
+    // Step 2: Check if attendance record already exists
     $check = $conn->prepare("
         SELECT id FROM student_attendance 
         WHERE student_id = ? AND subject_id = ? AND attendance_date = ?
@@ -522,7 +529,7 @@ function updateAttendanceIfApproved($conn, $requestId) {
     $checkRes = $check->get_result();
 
     if ($checkRes->num_rows > 0) {
-        // Update existing attendance record
+        // Update existing attendance record to Present
         $update = $conn->prepare("
             UPDATE student_attendance 
             SET status = 'Present' 
@@ -531,9 +538,9 @@ function updateAttendanceIfApproved($conn, $requestId) {
         $update->bind_param("iis", $studentId, $subjectId, $date);
         $update->execute();
 
-        return ['success' => true, 'message' => 'Attendance updated to Present.'];
+        return ['success' => true, 'message' => 'Attendance status updated to Present.'];
     } else {
-        // Insert new attendance record
+        // Insert new record as Present
         $insert = $conn->prepare("
             INSERT INTO student_attendance (student_id, subject_id, attendance_date, status) 
             VALUES (?, ?, ?, 'Present')
@@ -544,12 +551,3 @@ function updateAttendanceIfApproved($conn, $requestId) {
         return ['success' => true, 'message' => 'Attendance record inserted as Present.'];
     }
 }
-
-
-
-?>
-
-
-
-
-

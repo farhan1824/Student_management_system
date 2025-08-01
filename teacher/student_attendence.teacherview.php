@@ -35,6 +35,7 @@ $students = $conn->query($studentSql);
 ?>
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Student Attendance</title>
     <style>
@@ -61,7 +62,7 @@ $students = $conn->query($studentSql);
             font-size: 16px;
             background-color: #fff;
             color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
 
@@ -76,7 +77,8 @@ $students = $conn->query($studentSql);
             background: white;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             border: 1px solid #ccc;
             text-align: center;
@@ -108,6 +110,7 @@ $students = $conn->query($studentSql);
         .back-btn:hover {
             background: #0056b3;
         }
+
         .correction-btn {
             background: linear-gradient(135deg, #ff416c, #ff4b2b);
             color: white;
@@ -117,196 +120,195 @@ $students = $conn->query($studentSql);
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .correction-btn:hover {
             background: linear-gradient(135deg, #e03e57, #e1441d);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
             transform: translateY(-2px);
         }
-
     </style>
 </head>
+
 <body>
 
-<h2>Attendance for "<?php echo htmlspecialchars($subjectName); ?>"</h2>
+    <h2>Attendance for "<?php echo htmlspecialchars($subjectName); ?>"</h2>
 
-<div class="calendar-wrapper">
-    <label for="date">Select Date: </label>
-    <input
-        type="date"
-        id="date"
-        name="date"
-        value="<?php echo $selectedDate; ?>"
-        max="<?php echo $today; ?>"  
-    >
-</div>
+    <div class="calendar-wrapper">
+        <label for="date">Select Date: </label>
+        <input
+            type="date"
+            id="date"
+            name="date"
+            value="<?php echo $selectedDate; ?>"
+            max="<?php echo $today; ?>">
+    </div>
 
-<?php if ($students && $students->num_rows > 0): ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Roll</th>
-                <th>Name</th>
-                <th>
-                    <?php
-                    if ($selectedDate === $today) {
-                        echo "Mark Attendance";
-                    } else {
-                        echo "Attendance Status";
-                    }
-                    ?>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($row = $students->fetch_assoc()): ?>
+    <?php if ($students && $students->num_rows > 0): ?>
+        <table>
+            <thead>
                 <tr>
-                    <td><?php echo htmlspecialchars($row['roll']); ?></td>
-                    <td><?php echo htmlspecialchars($row['name']); ?></td>
-                    <td>
-                           <?php if ($selectedDate === $today): ?>
-                               <!-- For today, show checkbox -->
-                               <input 
-                                   type="checkbox"
-                                   onchange="markStudentAttendance(<?php echo $row['id']; ?>, this)"
-                                   <?php echo $row['attended'] ? 'checked disabled' : ''; ?>
-                               >
-                           <?php else: ?>
-                               <?php
-                                   if ($row['attended']) {
-                                       echo "<strong style='color:green;'>Present</strong>";
-                                   } 
-
-
-                             else {
-                                       echo "<strong style='color:red;'>Absent</strong>";?>
-                                       <br>
-                                <button onclick="requestCorrection(<?php echo $row['id']; ?>)" class="correction-btn">Request Correction</button>
-                                  <?php } ?>z
-                           <?php endif; ?>
-                    </td>
-
+                    <th>Roll</th>
+                    <th>Name</th>
+                    <th>
+                        <?php
+                        if ($selectedDate === $today) {
+                            echo "Mark Attendance";
+                        } else {
+                            echo "Attendance Status";
+                        }
+                        ?>
+                    </th>
                 </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
-<?php else: ?>
-    <p style="text-align:center;">No students found for this subject.</p>
-<?php endif; ?>
+            </thead>
+            <tbody>
+                <?php while ($row = $students->fetch_assoc()): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($row['roll']); ?></td>
+                        <td><?php echo htmlspecialchars($row['name']); ?></td>
+                        <td>
+                            <?php if ($selectedDate === $today): ?>
+                                <!-- For today, show checkbox -->
+                                <input
+                                    type="checkbox"
+                                    onchange="markStudentAttendance(<?php echo $row['id']; ?>, this)"
+                                    <?php echo $row['attended'] ? 'checked disabled' : ''; ?>>
+                            <?php else: ?>
+                                <?php
+                                if ($row['attended']) {
+                                    echo "<strong style='color:green;'>Present</strong>";
+                                } else {
+                                    echo "<strong style='color:red;'>Absent</strong>"; ?>
+                                    <br>
+                                    <button onclick="requestCorrection(<?php echo $row['id']; ?>)" class="correction-btn">Request Correction</button>
+                                    <?php } ?>z
+                                <?php endif; ?>
+                        </td>
 
-<button class="back-btn" onclick="window.location.href='teacher_dashboard.php'">← Back to Dashboard</button>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <p style="text-align:center;">No students found for this subject.</p>
+    <?php endif; ?>
+
+    <button class="back-btn" onclick="window.location.href='teacher_dashboard.php'">← Back to Dashboard</button>
 
 
 </body>
+
 </html>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     // On date change, reload with the selected date
-document.getElementById('date').addEventListener('change', function () {
-    const date = this.value;
-    const url = new URL(window.location.href);
-    url.searchParams.set('date', date);
-    window.location.href = url.href;
-});
-
-// AJAX to mark attendance (only works for today)
-function markStudentAttendance(studentId, checkbox) {
-    if (!checkbox.checked) return;
-    checkbox.disabled = true;
-
-    fetch('../QueryModel/ajax_call.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            action: 'student_attendance',
-            student_id: studentId,
-            subject_id: <?php echo $subjectId; ?>,
-            date: "<?php echo $selectedDate; ?>"
-        })
-    })
-    .then(response => response.text())
-    .then(data => {
-        Swal.fire({
-            icon: 'success',
-            title: 'Attendance Marked',
-            text: data,
-            timer: 2000,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false
-        });
-    })
-    .catch(err => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Error marking attendance.',
-            toast: true,
-            position: 'top-end',
-            timer: 2500,
-            showConfirmButton: false
-        });
-        checkbox.checked = false;
-        checkbox.disabled = false;
-        console.error(err);
+    document.getElementById('date').addEventListener('change', function() {
+        const date = this.value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('date', date);
+        window.location.href = url.href;
     });
-}
 
-function requestCorrection(studentId) {
-    Swal.fire({
-        title: 'Request Attendance Correction',
-        input: 'text',
-        inputLabel: 'Reason',
-        inputPlaceholder: 'Enter your reason...',
-        showCancelButton: true,
-        confirmButtonText: 'Submit',
-        confirmButtonColor: '#007bff',
-        cancelButtonColor: '#dc3545',
-        inputValidator: (value) => {
-            if (!value) return 'You need to provide a reason!';
-        }
-    }).then(result => {
-        if (!result.isConfirmed) return;
+    // AJAX to mark attendance (only works for today)
+    function markStudentAttendance(studentId, checkbox) {
+        if (!checkbox.checked) return;
+        checkbox.disabled = true;
 
         fetch('../QueryModel/ajax_call.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                action: 'request_attendance_correction',
-                student_id: studentId,
-                subject_id: <?php echo $subjectId; ?>,
-                date: "<?php echo $selectedDate; ?>",
-                reason: result.value
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    action: 'student_attendance',
+                    student_id: studentId,
+                    subject_id: <?php echo $subjectId; ?>,
+                    date: "<?php echo $selectedDate; ?>"
+                })
             })
-        })
-        .then(res => res.text())
-        .then(data => {
-            Swal.fire({
-                icon: 'success',
-                title: 'Correction Requested',
-                text: data,
-                timer: 2000,
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false
+            .then(response => response.text())
+            .then(data => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Attendance Marked',
+                    text: data,
+                    timer: 2000,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error marking attendance.',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+                checkbox.checked = false;
+                checkbox.disabled = false;
+                console.error(err);
             });
-        })
-        .catch(err => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Error requesting correction.',
-                toast: true,
-                position: 'top-end',
-                timer: 2500,
-                showConfirmButton: false
-            });
-            console.error(err);
-        });
-    });
-}
+    }
 
+    function requestCorrection(studentId) {
+        Swal.fire({
+            title: 'Request Attendance Correction',
+            input: 'text',
+            inputLabel: 'Reason',
+            inputPlaceholder: 'Enter your reason...',
+            showCancelButton: true,
+            confirmButtonText: 'Submit',
+            confirmButtonColor: '#007bff',
+            cancelButtonColor: '#dc3545',
+            inputValidator: (value) => {
+                if (!value) return 'You need to provide a reason!';
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch('../QueryModel/ajax_call.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        action: 'request_attendance_correction',
+                        student_id: studentId,
+                        subject_id: <?php echo $subjectId; ?>,
+                        date: "<?php echo $selectedDate; ?>",
+                        reason: result.value
+                    })
+                })
+                .then(res => res.text())
+                .then(data => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Correction Requested',
+                        text: data,
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error requesting correction.',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                    console.error(err);
+                });
+        });
+    }
 </script>

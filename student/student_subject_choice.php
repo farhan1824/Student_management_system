@@ -6,11 +6,11 @@ $studentRoll = $_SESSION['register_student_roll'];
 $sql = "SELECT id, name, profile_pic,email FROM students WHERE roll = '$studentRoll'";
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $studentId = $row['id'];
-    $studentName = $row['name'];
-    $studentEmail = $row['email'];
-    $profilePic = $row['profile_pic'] ?? 'default.jpg';
+  $row = $result->fetch_assoc();
+  $studentId = $row['id'];
+  $studentName = $row['name'];
+  $studentEmail = $row['email'];
+  $profilePic = $row['profile_pic'] ?? 'default.jpg';
 }
 $availableSubjects = [];
 $subjectQuery = "
@@ -21,16 +21,17 @@ $subjectQuery = "
 ";
 $res = $conn->query($subjectQuery);
 if ($res && $res->num_rows > 0) {
-    while ($row = $res->fetch_assoc()) {
-        $availableSubjects[] = $row;
-    }
+  while ($row = $res->fetch_assoc()) {
+    $availableSubjects[] = $row;
+  }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Subject Choice</title>
   <style>
     * {
@@ -187,48 +188,50 @@ if ($res && $res->num_rows > 0) {
     }
   </style>
 </head>
+
 <body>
 
-<div class="card profile-form" id="welcomeCard">
-  <div class="form-flex">
-    <div class="left">
-      <img src="../<?php echo htmlspecialchars($profilePic); ?>" alt="Profile Picture" class="profile-pic" />
-    </div>
-    <div class="middle">
-      <h2>Hello, <?php echo htmlspecialchars($studentName); ?> 👋</h2>
-      <p>Roll: <strong><?php echo htmlspecialchars($studentRoll); ?></strong></p>
-
-      <label for="student_name">Full Name</label>
-      <input type="text" id="student_name" value="<?php echo htmlspecialchars($studentName); ?>" />
-
-      <label for="student_email">Email</label>
-      <input type="text" id="student_email" value="<?php echo htmlspecialchars($studentEmail); ?>" disabled />
-
-      <label for="subject_multi_select">Choose Subjects</label>
-      <div class="multi-select-container" id="subject_multi_select">
-        <button type="button" class="multi-select-btn" aria-haspopup="listbox" aria-expanded="false" id="multiSelectBtn">
-          Select Subjects
-          <span class="arrow" id="arrow"></span>
-        </button>
-        <div class="dropdown" role="listbox" aria-multiselectable="true" tabindex="-1" id="dropdownList">
-          <?php foreach ($availableSubjects as $sub): ?>
-            <label>
-              <input type="checkbox" value="<?php echo $sub['id']; ?>" />
-              <?php echo htmlspecialchars($sub['name']); ?>
-            </label>
-          <?php endforeach; ?>
-        </div>
+  <div class="card profile-form" id="welcomeCard">
+    <div class="form-flex">
+      <div class="left">
+        <img src="../<?php echo htmlspecialchars($profilePic); ?>" alt="Profile Picture" class="profile-pic" />
       </div>
+      <div class="middle">
+        <h2>Hello, <?php echo htmlspecialchars($studentName); ?> 👋</h2>
+        <p>Roll: <strong><?php echo htmlspecialchars($studentRoll); ?></strong></p>
 
-      <form id="studentInfoForm">
-        <button type="submit">Submit</button>
-      </form>
+        <label for="student_name">Full Name</label>
+        <input type="text" id="student_name" value="<?php echo htmlspecialchars($studentName); ?>" />
+
+        <label for="student_email">Email</label>
+        <input type="text" id="student_email" value="<?php echo htmlspecialchars($studentEmail); ?>" disabled />
+
+        <label for="subject_multi_select">Choose Subjects</label>
+        <div class="multi-select-container" id="subject_multi_select">
+          <button type="button" class="multi-select-btn" aria-haspopup="listbox" aria-expanded="false" id="multiSelectBtn">
+            Select Subjects
+            <span class="arrow" id="arrow"></span>
+          </button>
+          <div class="dropdown" role="listbox" aria-multiselectable="true" tabindex="-1" id="dropdownList">
+            <?php foreach ($availableSubjects as $sub): ?>
+              <label>
+                <input type="checkbox" value="<?php echo $sub['id']; ?>" />
+                <?php echo htmlspecialchars($sub['name']); ?>
+              </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <form id="studentInfoForm">
+          <button type="submit">Submit</button>
+        </form>
+      </div>
     </div>
   </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
+
 </html>
 <script>
   const multiSelectBtn = document.getElementById('multiSelectBtn');
@@ -274,51 +277,53 @@ if ($res && $res->num_rows > 0) {
     e.preventDefault();
 
     const selectedSubjects = Array.from(dropdown.querySelectorAll('input[type="checkbox"]:checked'))
-                                  .map(cb => cb.value);
+      .map(cb => cb.value);
     if (selectedSubjects.length === 0) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'No Subjects Selected',
-      text: 'Please select at least one subject before submitting.',
-      confirmButtonColor: '#F4D03F'
-    });
-    return;
-   }
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Subjects Selected',
+        text: 'Please select at least one subject before submitting.',
+        confirmButtonColor: '#F4D03F'
+      });
+      return;
+    }
 
     const studentName = studentNameInput.value.trim();
 
-      fetch('../QueryModel/ajax_call.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        action: 'save_selected_subjects',
-        name: studentName,
-        subjects: selectedSubjects.join(',')
+    fetch('../QueryModel/ajax_call.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          action: 'save_selected_subjects',
+          name: studentName,
+          subjects: selectedSubjects.join(',')
+        })
       })
-    })
-    .then(res => res.text())
-    .then(data => {
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: data,
-        confirmButtonColor: '#28a745',
-        timer: 2500,
-        timerProgressBar: true,
-        willClose: () => {
-          window.location.href = "student_dashboard.php";
-        }
+      .then(res => res.text())
+      .then(data => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: data,
+          confirmButtonColor: '#28a745',
+          timer: 2500,
+          timerProgressBar: true,
+          willClose: () => {
+            window.location.href = "student_dashboard.php";
+          }
+        });
+      })
+      .catch(err => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Error submitting form. Please try again.',
+          confirmButtonColor: '#dc3545',
+        });
+        console.error(err);
       });
-    })
-    .catch(err => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: 'Error submitting form. Please try again.',
-        confirmButtonColor: '#dc3545',
-      });
-      console.error(err);
-    });
 
   });
 
@@ -341,5 +346,4 @@ if ($res && $res->num_rows > 0) {
       sessionStorage.setItem('subjectPopupShown', 'true');
     }
   });
-
 </script>

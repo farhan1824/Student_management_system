@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Teacher Login</title>
@@ -30,7 +31,8 @@
             margin-bottom: 20px;
         }
 
-        input[type="text"], input[type="password"] {
+        input[type="text"],
+        input[type="password"] {
             width: 90%;
             padding: 12px;
             margin: 10px 0;
@@ -71,24 +73,25 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="login-box">
-    <h2>Teacher Login</h2>
-    <form method="POST" action="">
-        <input type="text" name="teacher_number" placeholder="Teacher Number" ><br>
-        <input type="password" name="password" placeholder="Password" ><br>
-        <button type="submit">Login</button>
-    </form>
-    <?php if (!empty($error)): ?>
-        <div class="error"><?= $error ?></div>
-    <?php endif; ?>
-    <a href="../index.php">← Back to Home</a>
-</div>
+    <div class="login-box">
+        <h2>Teacher Login</h2>
+        <form method="POST" action="">
+            <input type="text" name="teacher_number" placeholder="Teacher Number"><br>
+            <input type="password" name="password" placeholder="Password"><br>
+            <button type="submit">Login</button>
+        </form>
+        <?php if (!empty($error)): ?>
+            <div class="error"><?php echo $error ?></div>
+        <?php endif; ?>
+        <a href="../index.php">← Back to Home</a>
+    </div>
 
 </body>
-</html>
 
+</html>
 
 <?php
 require_once '../db/db.php'; // Include database connection
@@ -111,29 +114,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Escape input to prevent SQL injection
     $teacherNumber = $conn->real_escape_string($teacherNumber);
     $passwordInput = $conn->real_escape_string($passwordInput);
-    if(isInputEmpty($teacherNumber, $passwordInput)) {
+    if (isInputEmpty($teacherNumber, $passwordInput)) {
         header("Location: teacher_login.php?error=empty_fields");
         exit();
-
-    }
-    else{
- // Query
-    $sql = "SELECT * FROM teach_details WHERE teach_num = '$teacherNumber' AND pwd = '$passwordInput'";
-    $result = $conn->query($sql);
-
-    if ($result && $result->num_rows === 1) {
-        // Valid credentials, set session
-        $_SESSION['teacher_number'] = $teacherNumber;
-
-        // Redirect to dashboard
-        header("Location: teacher_dashboard.php");
-        exit();
     } else {
-       header("Location:teacher_login.php?error=invalid_teacher_login");
-        exit();
+        // Query
+        $sql = "SELECT * FROM teach_details WHERE teach_num = '$teacherNumber' AND pwd = '$passwordInput'";
+        $result = $conn->query($sql);
+
+        if ($result && $result->num_rows === 1) {
+            // Valid credentials, set session
+            $_SESSION['teacher_number'] = $teacherNumber;
+
+            // Redirect to dashboard
+            header("Location: teacher_dashboard.php");
+            exit();
+        } else {
+            header("Location:teacher_login.php?error=invalid_teacher_login");
+            exit();
+        }
     }
-    }
-    
-   
 }
 ?>

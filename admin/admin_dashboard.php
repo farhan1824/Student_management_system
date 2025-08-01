@@ -352,7 +352,7 @@ while ($row = $subjectResult->fetch_assoc()) {
 
 <body>
 
-  <h1>Welcome, <?= htmlspecialchars($_SESSION['admin_username']) ?></h1>
+  <h1>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username']) ?></h1>
 
   <div class="dashboard-container">
     <!-- 1st Card: Teacher Correction Requests -->
@@ -369,16 +369,16 @@ while ($row = $subjectResult->fetch_assoc()) {
         <?php foreach ($teacherRequests as $teacherName => $requests): ?>
           <div class="drawer">
             <div class="drawer-header" onclick="toggleDrawer(this)">
-              Teacher: <?= htmlspecialchars($teacherName) ?>
+              Teacher: <?php echo htmlspecialchars($teacherName) ?>
             </div>
             <div class="drawer-content">
               <?php foreach ($requests as $req): ?>
                 <div class="complaint">
-                  <?= htmlspecialchars($req['reason']) ?> <br>
-                  <small>Type: <?= htmlspecialchars($req['type']) ?> | Date: <?= $req['date'] ?></small>
+                  <?php echo htmlspecialchars($req['reason']) ?> <br>
+                  <small>Type: <?php echo htmlspecialchars($req['type']) ?> | Date: <?php echo $req['date'] ?></small>
                   <div class="btn-group">
-                    <button class="btn-approve" onclick="handleActionTeacher('approved', <?= $req['id'] ?>, this)">Approve</button>
-                    <button class="btn-disapprove" onclick="handleActionTeacher('rejected', <?= $req['id'] ?>, this)">Disapprove</button>
+                    <button class="btn-approve" onclick="handleActionTeacher('approved', <?php echo $req['id'] ?>, this)">Approve</button>
+                    <button class="btn-disapprove" onclick="handleActionTeacher('rejected', <?php echo $req['id'] ?>, this)">Disapprove</button>
                   </div>
                 </div>
               <?php endforeach; ?>
@@ -406,12 +406,12 @@ while ($row = $subjectResult->fetch_assoc()) {
       <?php else: ?>
         <?php foreach ($studentRequests as $req): ?>
           <div class="mini-card">
-            <div class="mini-card-header">Student: <?= htmlspecialchars($req['name']) ?></div>
-            <div>Request: <?= htmlspecialchars($req['reason']) ?></div>
-            <small>Type: <?= htmlspecialchars($req['type']) ?> | Date: <?= $req['date'] ?></small>
+            <div class="mini-card-header">Student: <?php echo htmlspecialchars($req['name']) ?></div>
+            <div>Request: <?php echo htmlspecialchars($req['reason']) ?></div>
+            <small>Type: <?php echo htmlspecialchars($req['type']) ?> | Date: <?php echo $req['date'] ?></small>
             <div class="mini-card-buttons">
-              <button class="btn-approve" onclick="handleActionStudent('approved', <?= $req['id'] ?>, this)">Approve</button>
-              <button class="btn-disapprove" onclick="handleActionStudent('rejected', <?= $req['id'] ?>, this)">Disapprove</button>
+              <button class="btn-approve" onclick="handleActionStudent('approved', <?php echo $req['id'] ?>, this)">Approve</button>
+              <button class="btn-disapprove" onclick="handleActionStudent('rejected', <?php echo $req['id'] ?>, this)">Disapprove</button>
             </div>
           </div>
         <?php endforeach; ?>
@@ -427,8 +427,8 @@ while ($row = $subjectResult->fetch_assoc()) {
         <select id="teacherSelect" name="teacher_num" required>
           <option value="" disabled selected>Select teacher</option>
           <?php foreach ($teachers as $teacher): ?>
-            <option value="<?= htmlspecialchars($teacher['teach_num']) ?>">
-              <?= htmlspecialchars($teacher['Name']) ?>
+            <option value="<?php echo htmlspecialchars($teacher['teach_num']) ?>">
+              <?php echo htmlspecialchars($teacher['Name']) ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -443,8 +443,8 @@ while ($row = $subjectResult->fetch_assoc()) {
           <div class="dropdown" id="subjectDropdown">
             <?php foreach ($subjects as $subject): ?>
               <label>
-                <input type="checkbox" value="<?= $subject['id'] ?>" />
-                <?= htmlspecialchars($subject['name']) ?>
+                <input type="checkbox" value="<?php echo $subject['id'] ?>" />
+                <?php echo htmlspecialchars($subject['name']) ?>
               </label>
             <?php endforeach; ?>
           </div>

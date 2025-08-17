@@ -75,11 +75,14 @@ if ($result && $result->num_rows > 0) {
 
 // Fetch all teachers
 $teachers = [];
-$teacherResult = $conn->query("SELECT teach_num, Name FROM teach_details ORDER BY Name ASC");
+$teacherResult = $conn->query("SELECT teach_num, Name, teach_status FROM teach_details ORDER BY Name ASC");
 while ($row = $teacherResult->fetch_assoc()) {
   $teachers[] = $row;
 }
 
+$regularTeachers = array_filter($teachers, function ($teacher) {
+  return $teacher['teach_status'] === 'regular_teacher';
+});
 // Fetch all subjects
 $subjects = [];
 $subjectResult = $conn->query("SELECT id, name  FROM subjects ORDER BY name  ASC");
@@ -393,8 +396,8 @@ while ($row = $subjectResult->fetch_assoc()) {
       <h2>Student Correction Requests</h2>
 
       <!-- <div id="student-reviewed-message" style="display:none; text-align:center; margin-top:20px; font-weight:700; color:#4CAF50; font-size:1.2rem;">
-    All student correction requests have been reviewed.
-  </div> -->
+     All student correction requests have been reviewed.
+      </div> -->
 
       <?php if (empty($studentRequests)): ?>
 
@@ -417,8 +420,6 @@ while ($row = $subjectResult->fetch_assoc()) {
         <?php endforeach; ?>
       <?php endif; ?>
     </div>
-
-
     <!-- 3rd Card: Assign Subjects to Teachers -->
     <div class="card" id="assign-subjects-card">
       <h2>Assign Subjects to Teachers</h2>
@@ -454,6 +455,40 @@ while ($row = $subjectResult->fetch_assoc()) {
       </form>
       <div id="assignResult" style="margin-top: 12px; font-weight: 600; color: green;"></div>
     </div>
+    <!-- 4th Card: Assign Teachers either guide teacher or regular teacher -->
+    <div class="card" id="assign-teacher-status-card">
+      <h2>Assign Teacher Role</h2>
+      <form id="assignRoleForm" onsubmit="return assignRole(event)">
+        <!-- Teacher Selection -->
+        <label for="teacherSelectRole">Select Teacher:</label>
+        <select id="teacherSelectRole" name="teacher_num" required>
+          <option value="" disabled selected>Select teacher</option>
+          <?php foreach ($regularTeachers as $teacher): ?>
+            <option value="<?php echo htmlspecialchars($teacher['teach_num']) ?>">
+              <?php echo htmlspecialchars($teacher['Name']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+
+
+        <!-- Role Selection -->
+        <label for="roleSelect">Select Role:</label>
+        <select id="roleSelect" name="teach_status" required>
+          <option value="" disabled selected>Select role</option>
+          <option value="guide_teacher">Guide Teacher</option>
+          <option value="regular_teacher">Regular Teacher</option>
+        </select>
+
+        <!-- Submit Button -->
+        <input type="submit" value="Assign Roles" />
+      </form>
+      <div id="assignResult" style="margin-top: 12px; font-weight: 600; color: green;"></div>
+    </div>
+
+
+
+
+
 
   </div>
 </body>
@@ -689,5 +724,57 @@ while ($row = $subjectResult->fetch_assoc()) {
       });
 
     return false;
+  }
+
+  function assignRole(event) {
+    event.preventDefault();
+
+    const teacherNum = document.getElementById('teacherSelectRole').value;
+    // die(teacherNum)
+    const role = document.getElementById('roleSelect').value;
+
+    fetch('../QueryModel/ajax_call.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          action: 'assign_role',
+          teacher_num: teacherNum,
+          teach_status: role
+        })
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Role assignment failed or parameters missing.');
+        return response.text();
+      })
+      .then(data => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Role Assigned!',
+          text: data,
+          timer: 1800,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+
+        // Reset form after successful assignment
+        const form = document.getElementById('assignRoleForm');
+        if (form) {
+          form.reset();
+        }
+      })
+      .catch(error => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: error.message,
+          timer: 2500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      });
   }
 </script>

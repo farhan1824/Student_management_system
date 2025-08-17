@@ -105,6 +105,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
 
+        case 'assign_role':
+            $teacherNum  = $_POST['teacher_num'] ?? null;
+            $teachStatus = $_POST['teach_status'] ?? null;
+
+            if ($teacherNum && $teachStatus) {
+                $result = assignRoleToTeacher($conn, $teacherNum, $teachStatus);
+
+                if ($result['success']) {
+                    echo $result['message'];
+                } else {
+                    http_response_code(400);
+                    echo $result['message'];
+                }
+            } else {
+                http_response_code(400);
+                echo "Missing parameters. teacher_num: " . var_export($teacherNum, true) .
+                    ", teach_status: " . var_export($teachStatus, true);
+            }
+            break;
+
+
 
         default:
             http_response_code(400);

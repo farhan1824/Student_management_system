@@ -551,3 +551,30 @@ function updateAttendanceIfApproved($conn, $requestId)
         return ['success' => true, 'message' => 'Attendance record inserted as Present.'];
     }
 }
+function assignRoleToTeacher($conn, $teacherNum, $teachStatus)
+{
+    // Optional: validate teach_status if you have a fixed list
+    $validStatuses = ['guide_teacher', 'regular_teacher'];
+    if (!in_array($teachStatus, $validStatuses)) {
+        return [
+            'success' => false,
+            'message' => 'Invalid role selected.'
+        ];
+    }
+
+    // Update teacher status
+    $stmt = $conn->prepare("UPDATE teach_details SET teach_status = ? WHERE teach_num = ?");
+    $stmt->bind_param("ss", $teachStatus, $teacherNum);
+
+    if ($stmt->execute()) {
+        return [
+            'success' => true,
+            'message' => 'Teacher role updated successfully.'
+        ];
+    } else {
+        return [
+            'success' => false,
+            'message' => 'Failed to update teacher role.'
+        ];
+    }
+}

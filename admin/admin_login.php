@@ -15,14 +15,31 @@
 
     body {
       height: 100vh;
-      background: linear-gradient(135deg, #D2D3BE, #000000);
+      width: 100%;
+      background: url("../640px-Dhaka_city_college.jpg") center/cover no-repeat;
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
+    }
+
+    /* Glass/frosted layer */
+    .glass-bg {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.15);
+      /* subtle white layer */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 0;
     }
 
     .login-card {
-      background: #D2D3BE;
+      position: relative;
+      z-index: 1;
+      /* above glass layer */
+      background: rgba(210, 211, 190, 0.85);
+      /* your color with slight transparency */
       color: #000;
       padding: 40px 30px;
       border-radius: 20px;
@@ -94,6 +111,9 @@
 
 <body>
 
+  <!-- Glass layer -->
+  <div class="glass-bg"></div>
+
   <div class="login-card">
     <h2>Admin Panel Login</h2>
     <form action="admin_login.php" method="POST">
@@ -114,6 +134,7 @@
 </body>
 
 </html>
+
 <?php
 session_start();
 require_once "../error.php"; // Include error handling

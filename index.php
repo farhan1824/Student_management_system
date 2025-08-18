@@ -15,13 +15,13 @@
     body {
       height: 100vh;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #2C3E50 0%, #9B59B6 100%);
+      background: #f4f4f4;
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      color: #fff;
       transition: background 1s ease;
+      position: relative;
     }
 
     #glassCanvas {
@@ -35,13 +35,15 @@
       pointer-events: none;
     }
 
+    /* Index UI */
     .container {
-      text-align: center;
-      padding: 40px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      display: flex;
+      width: 900px;
+      height: 500px;
+      background: #fff;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
       z-index: 1;
       transition: opacity 0.5s ease;
     }
@@ -51,22 +53,74 @@
       pointer-events: none;
     }
 
-    .btn {
-      display: inline-block;
-      margin: 10px;
-      padding: 14px 28px;
-      font-size: 18px;
-      color: black;
-      background: linear-gradient(45deg, #FFCBA4, #F4D03F);
-      border: none;
-      border-radius: 30px;
-      text-decoration: none;
-      cursor: pointer;
-      transition: transform 0.3s ease;
+    .left-panel {
+      flex: 1;
+      background: url("./unnamed.webp") center/cover no-repeat;
     }
 
-    .btn:hover {
-      transform: scale(1.05);
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      background: #fff;
+    }
+
+    .right-panel h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #1E2457, #650E0B);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+    }
+
+    .btn {
+      display: block;
+      width: 200px;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn.student {
+      background: #1E2457;
+      color: white;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn.student:hover {
+      background: #162041;
+    }
+
+    .btn.teacher {
+      background: #650E0B;
+      color: white;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn.teacher:hover {
+      background: #520b09;
+    }
+
+    /* Admin UI */
+    .admin-glass {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 1;
+      display: none;
     }
 
     .admin-ui {
@@ -74,32 +128,39 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #E7E8D1;
-      color: black;
+      background: #fff;
       padding: 40px;
-      border-radius: 20px;
+      border-radius: 12px;
       text-align: center;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
       opacity: 0;
       pointer-events: none;
-      z-index: 1000;
+      z-index: 2;
       display: none;
     }
 
+    .admin-ui h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #1E2457, #650E0B);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     .admin-btn {
-      background: black;
-      color: #E7E8D1;
-      padding: 14px 28px;
-      border-radius: 30px;
-      font-size: 18px;
+      background: #1E2457;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
       text-decoration: none;
       display: inline-block;
-      margin-top: 20px;
       transition: transform 0.3s ease;
     }
 
     .admin-btn:hover {
       transform: scale(1.05);
+      background: #162041;
     }
   </style>
 </head>
@@ -108,11 +169,13 @@
 
   <canvas id="glassCanvas"></canvas>
 
+  <!-- Index Page UI -->
   <div class="container" id="mainContainer">
-    <h2>Welcome to the Login Portal</h2>
-    <div id="buttonGroup">
-      <a href="student/student_entry.php" class="btn">Student Login</a>
-      <a href="teacher/teacher_login.php" class="btn">Teacher Login</a>
+    <div class="left-panel"></div>
+    <div class="right-panel">
+      <h2>Dhaka City College Portal</h2>
+      <a href="student/student_entry.php" class="btn student">Student Login</a>
+      <a href="teacher/teacher_login.php" class="btn teacher">Teacher Login</a>
     </div>
   </div>
 
@@ -123,7 +186,7 @@
     const canvas = document.getElementById('glassCanvas');
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('mainContainer');
-    let adminUI; // Will be created dynamically
+    let adminUI, adminGlass;
 
     function resize() {
       canvas.width = window.innerWidth;
@@ -193,7 +256,7 @@
         if (step <= total) {
           requestAnimationFrame(animateExplode);
         } else {
-          document.body.style.background = 'linear-gradient(135deg, #E7E8D1 0%, #000 100%)';
+          document.body.style.background = "url('./640px-Dhaka_city_college.jpg') center/cover no-repeat";
           setTimeout(() => animateImplode(shards), 300);
         }
       }
@@ -229,7 +292,7 @@
             requestAnimationFrame(animate);
           } else {
             canvas.style.display = 'none';
-            showAdminUI(); // call the dynamic builder
+            showAdminUI();
           }
         }
         animate();
@@ -239,6 +302,12 @@
     }
 
     function showAdminUI() {
+      // Glass overlay behind admin login
+      adminGlass = document.createElement('div');
+      adminGlass.className = 'admin-glass';
+      adminGlass.style.display = 'block';
+      document.body.appendChild(adminGlass);
+
       adminUI = document.createElement('div');
       adminUI.className = 'admin-ui';
       adminUI.style.display = 'block';
@@ -252,7 +321,6 @@
 
       document.body.appendChild(adminUI);
 
-      // Trigger fade-in
       setTimeout(() => {
         adminUI.style.opacity = '1';
         adminUI.style.pointerEvents = 'auto';

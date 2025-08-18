@@ -1,27 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Portal Entry</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #2C3E50  0%, #9B59B6  100%);
+    }
+
+    body {
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      position: relative;
+      background: url("../640px-Dhaka_city_college.jpg") center/cover no-repeat;
+    }
+
+    /* Frosted glass overlay */
+    .glass-bg {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 0;
     }
 
     .entry-container {
-      background-color: white;
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.85);
       padding: 40px;
       border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
       text-align: center;
-      width: 360px;
+      transition: all 0.3s ease;
     }
 
     .entry-container h2 {
@@ -41,21 +60,20 @@
       padding: 12px;
       font-size: 16px;
       font-weight: bold;
-      border: none;
       border-radius: 10px;
+      border: none;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
+      transition: 0.3s ease;
     }
 
     .entry-button.existing {
-      background-color: #F4D03F;
-      color: #000;
+      background-color: #1E2457;
+      color: #fff;
     }
 
     .entry-button.new {
-      background-color: #FFCBA4;
-      color: #000;
-      border: 2px solid #F4D03F;
+      background-color: #650E0B;
+      color: #fff;
     }
 
     .entry-button:hover {
@@ -63,15 +81,23 @@
     }
 
     .entry-button.existing:hover {
-      background-color: #e1bc2e;
+      background-color: #fff;
+      color: #1E2457;
+      border: 2px solid #1E2457;
     }
 
     .entry-button.new:hover {
-      background-color: #f9b887;
+      background-color: #fff;
+      color: #650E0B;
+      border: 2px solid #650E0B;
     }
   </style>
 </head>
+
 <body>
+
+  <!-- Glass overlay -->
+  <div class="glass-bg"></div>
 
   <div class="entry-container">
     <h2>Welcome to the Student Portal</h2>
@@ -87,4 +113,5 @@
   </div>
 
 </body>
+
 </html>
